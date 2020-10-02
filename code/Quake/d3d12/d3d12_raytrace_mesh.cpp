@@ -154,21 +154,21 @@ void *GL_LoadDXRMesh(msurface_t *surfaces, int numSurfaces)  {
 	return mesh;
 }
 
-void GL_AliasVertexToDxrVertex(trivertx_t inVert, stvert_t stvert, dxrVertex_t &vertex, float x, float y, float w, float h) {
+void GL_AliasVertexToDxrVertex(trivertx_t inVert, stvert_t stvert, dxrVertex_t &vertex, float x, float y, float w, float h, int facesFront) {
 	memset(&vertex, 0, sizeof(dxrVertex_t));
 	vertex.xyz[0] = inVert.v[0];
 	vertex.xyz[1] = inVert.v[1];
 	vertex.xyz[2] = inVert.v[2];
-	vertex.st[0] = (stvert.s + 0.5);
-	vertex.st[1] = (stvert.t + 0.5);
+	vertex.st[0] = stvert.s;
+	vertex.st[1] = stvert.t;
 	vertex.st[2] = 0;
 
-	if(stvert.onseam) {
+	if(stvert.onseam && !facesFront) {
 		vertex.st[0] += w * 0.5f; // backface.
 	}
 
-	vertex.st[0] = vertex.st[0] / w;
-	vertex.st[1] = vertex.st[1] / h;
+	vertex.st[0] = (vertex.st[0] + 0.5) / w;
+	vertex.st[1] = (vertex.st[1] + 0.5) / h;
 
 	//assert(vertex.st[0] > 1 || vertex.st[1] > 0);
 	//if(vertex.st[0] > 1 || vertex.st[1] > 1 || w == -1 || h == -1) {
@@ -205,7 +205,7 @@ void *GL_LoadDXRAliasMesh(const char* name, int numVertexes, trivertx_t* vertexe
 	{
 		{
 			dxrVertex_t v;
-			GL_AliasVertexToDxrVertex(vertexes[triangles[d].vertindex[0]], stverts[triangles[d].vertindex[0]], v, x, y, w, h);
+			GL_AliasVertexToDxrVertex(vertexes[triangles[d].vertindex[0]], stverts[triangles[d].vertindex[0]], v, x, y, w, h, triangles[d].facesfront);
 			mesh->meshTriVertexes.push_back(v);
 			sceneVertexes.push_back(v);
 			mesh->numSceneVertexes++;
@@ -213,7 +213,7 @@ void *GL_LoadDXRAliasMesh(const char* name, int numVertexes, trivertx_t* vertexe
 
 		{
 			dxrVertex_t v;
-			GL_AliasVertexToDxrVertex(vertexes[triangles[d].vertindex[1]], stverts[triangles[d].vertindex[1]], v, x, y, w, h);
+			GL_AliasVertexToDxrVertex(vertexes[triangles[d].vertindex[1]], stverts[triangles[d].vertindex[1]], v, x, y, w, h, triangles[d].facesfront);
 			mesh->meshTriVertexes.push_back(v);
 			sceneVertexes.push_back(v);
 			mesh->numSceneVertexes++;
@@ -221,7 +221,7 @@ void *GL_LoadDXRAliasMesh(const char* name, int numVertexes, trivertx_t* vertexe
 
 		{
 			dxrVertex_t v;
-			GL_AliasVertexToDxrVertex(vertexes[triangles[d].vertindex[2]], stverts[triangles[d].vertindex[2]], v, x, y, w, h);
+			GL_AliasVertexToDxrVertex(vertexes[triangles[d].vertindex[2]], stverts[triangles[d].vertindex[2]], v, x, y, w, h, triangles[d].facesfront);
 			mesh->meshTriVertexes.push_back(v);
 			sceneVertexes.push_back(v);
 			mesh->numSceneVertexes++;
