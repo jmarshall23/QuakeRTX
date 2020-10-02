@@ -818,7 +818,7 @@ void GL_Render(float x, float y, float z, float* viewAngles)
 	//matrices[1] =
 	//	DirectX::XMMatrixPerspectiveFovRH(fovAngleY, m_aspectRatio, 0.1f, 1000.0f);
 	float fov_x, fov_y;
-	GL_CalcFov(60.0f, fov_x, fov_y);
+	GL_CalcFov(scr_fov.value, fov_x, fov_y);
 	create_projection_matrix((float *)&matrices[1], 0.1, 1000.0f, fov_x, fov_y);
 
 	// Raytracing has to do the contrary of rasterization: rays are defined in

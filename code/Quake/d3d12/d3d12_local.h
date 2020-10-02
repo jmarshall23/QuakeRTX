@@ -124,6 +124,7 @@ extern tr_renderer *renderer;
 extern "C" {
 	byte* SV_FatPVS(vec3_t org, qmodel_t* worldmodel);
 	mnode_t* SV_GetMapNodes(void);
+	extern cvar_t		scr_fov;
 };
 
 void GL_BuildLightList(float x, float y, float z);
