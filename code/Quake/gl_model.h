@@ -408,6 +408,8 @@ typedef enum {mod_brush, mod_sprite, mod_alias} modtype_t;
 #define	MOD_FBRIGHTHACK	1024	//when fullbrights are disabled, use a hack to render this model brighter
 //johnfitz
 
+#define MOD_MAXDXR_FRAMES 1200
+
 typedef struct qmodel_s
 {
 	char		name[MAX_QPATH];
@@ -498,7 +500,7 @@ typedef struct qmodel_s
 
 	int bmodelindex;
 
-	void* dxrModel;
+	void* dxrModel[MOD_MAXDXR_FRAMES];
 	stvert_t	stverts[MAXALIASVERTS];
 	mtriangle_t	triangles[MAXALIASTRIS];
 	int	numTris;

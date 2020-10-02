@@ -60,5 +60,8 @@ GL_MakeAliasModelDisplayLists
 */
 void GL_MakeAliasModelDisplayLists (qmodel_t *m, aliashdr_t *hdr)
 {
-	m->dxrModel = GL_LoadDXRAliasMesh(m->name, m->numvertexes, poseverts[0], m->numTris, m->triangles, m->stverts);
+	for (int i = 0; i < hdr->numframes; i++)
+	{
+		m->dxrModel[i] = GL_LoadDXRAliasMesh(m->name, m->numvertexes, poseverts[i], m->numTris, m->triangles, m->stverts);
+	}
 }

@@ -2067,7 +2067,7 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 		}
 	}
 	mod = bspMod;
-	bspMod->dxrModel = GL_LoadDXRMesh(bspMod->surfaces, bspMod->numsurfaces);
+	bspMod->dxrModel[0] = GL_LoadDXRMesh(bspMod->surfaces, bspMod->numsurfaces);
 //
 // set up the submodels (FIXME: this is confusing)
 //
@@ -2116,12 +2116,12 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 
 			sprintf(name, "*%i", i + 1);
 			loadmodel = Mod_FindName(name);
-			qboolean loadDXRMesh = loadmodel->dxrModel == NULL;
+			qboolean loadDXRMesh = loadmodel->dxrModel[0] == NULL;
 			*loadmodel = *mod;
 			if(loadDXRMesh)
 			{
 				currentmodel = loadmodel;
-				loadmodel->dxrModel = GL_LoadDXRMesh(&mod->surfaces[mod->submodels[i + 1].firstface], mod->submodels[i + 1].numfaces);
+				loadmodel->dxrModel[0] = GL_LoadDXRMesh(&mod->surfaces[mod->submodels[i + 1].firstface], mod->submodels[i + 1].numfaces);
 			}
 			strcpy(loadmodel->name, name);
 			mod = loadmodel;
