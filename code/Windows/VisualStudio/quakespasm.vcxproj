@@ -104,7 +104,7 @@ copy "$(SolutionDir)\..\SDL\lib64\*.dll" "$(TargetDir)"</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX64</TargetMachine>
-      <OutputFile>../../../quake.exe</OutputFile>
+      <OutputFile>../../../quakertx.exe</OutputFile>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)\..\codecs\x64\*.dll" "$(TargetDir)"

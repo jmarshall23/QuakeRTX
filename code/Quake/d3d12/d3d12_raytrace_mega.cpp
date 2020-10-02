@@ -147,7 +147,7 @@ void GL_LoadMegaXML(const char *path) {
 	tinyxml2::XMLDocument doc;
 	doc.LoadFile(path);
 
-	Con_Printf("Loading Mega XML %s...\n");
+	Con_Printf("Loading Mega XML %s...\n", path);
 
 	tinyxml2::XMLElement* root = doc.FirstChildElement();
 	if (root == NULL) {

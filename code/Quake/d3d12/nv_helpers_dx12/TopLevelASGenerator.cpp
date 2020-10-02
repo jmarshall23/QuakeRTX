@@ -138,7 +138,7 @@ void TopLevelASGenerator::ComputeASBufferSizes(
   *resultSizeInBytes = m_resultSizeInBytes;
   *descriptorsSizeInBytes = m_instanceDescsSizeInBytes;
 }
-
+#pragma optimize( "", off )
 //--------------------------------------------------------------------------------------------------
 //
 // Enqueue the construction of the acceleration structure on a command list,
