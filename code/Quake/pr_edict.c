@@ -944,6 +944,11 @@ const char *ED_ParseEdict (const char *data, edict_t *ent)
 
 		if (!ED_ParseEpair ((void *)&ent->v, key, com_token))
 			Host_Error ("ED_ParseEdict: parse error");
+
+
+		if (!strcmp(keyname, "light_lev")) {
+			ent->light = atof(com_token);
+		}
 	}
 
 	if (!init)
@@ -1048,7 +1053,11 @@ void ED_LoadFromFile (const char *data)
 				origin[2] += 20.0f;
 			}
 
-			GL_RegisterWorldLight(ent, origin[0], origin[1], origin[2], 300);
+			if (ent->light == 0) {
+				ent->light = 200;
+			}
+
+			GL_RegisterWorldLight(ent, origin[0], origin[1], origin[2], ent->light);
 		}
 // jmarshall end
 
