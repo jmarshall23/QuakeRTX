@@ -231,8 +231,8 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 	  float u = 0, v = 0;
 	  for(int i = 0; i < 3; i++)
 	  {
-			u += abs(BTriVertex[vertId + i].st.x) * barycentrics[i];
-			v += abs(BTriVertex[vertId + i].st.y) * barycentrics[i];
+			u += BTriVertex[vertId + i].st.x * barycentrics[i];
+			v += BTriVertex[vertId + i].st.y * barycentrics[i];
 	  }
 	  
 	  u = frac(u) / 4096;
@@ -255,8 +255,8 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 	float u = 0, v = 0;
 	  for(int i = 0; i < 3; i++)
 	  {
-			u += abs(BTriVertex[vertId + i].st.x) * barycentrics[i];
-			v += abs(BTriVertex[vertId + i].st.y) * barycentrics[i];
+			u += BTriVertex[vertId + i].st.x * barycentrics[i];
+			v += BTriVertex[vertId + i].st.y * barycentrics[i];
 	  }
 	  
 	  u = frac(u);
