@@ -23,20 +23,20 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 		msurface_t* fa = &surfaces[i];
 		dxrSurface_t surf;
 
+		int materialInfo = 0;
+
 		float x, y, w, h;
-		GL_FindMegaTile(fa->texinfo->texture->name, x, y, w, h);
-
-		int materialInfo = 1;
-
-		//if(strstr(fa->texinfo->texture->name, "rtex018")) {
-		//	materialInfo = 0;
-		//}
-
-		// HACK! 
-		if(x == -1) {
-			GL_FindMegaTile("rtex080", x, y, w, h);
-			materialInfo = 0; 
+		const char* name = fa->texinfo->texture->name;
+		if(name[0] == '*') {
+			materialInfo = 1;
+			name++;
 		}
+
+		if(strstr(name, "lava")) {
+			materialInfo = 2;
+		}
+
+		GL_FindMegaTile(name, x, y, w, h);
 
 		BuildSurfaceDisplayList(fa);
 

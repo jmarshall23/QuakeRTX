@@ -100,7 +100,7 @@ HitInfo FirePrimaryRay() {
 [shader("raygeneration")] void RayGen() {
 	HitInfo hit = FirePrimaryRay();
 
-	if(hit.lightColor.w == 1 && hit.worldNormal.z != 0 && hit.worldNormal.x == 0 && hit.worldNormal.y == 0)
+	if(hit.lightColor.w > 0)
 	{
 		  uint2 launchIndex = DispatchRaysIndex().xy;
           float2 dims = float2(DispatchRaysDimensions().xy);

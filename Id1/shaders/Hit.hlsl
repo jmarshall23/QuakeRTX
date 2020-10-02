@@ -180,29 +180,38 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
   
   float3 ndotl = 0;
   float3 debug = float3(1, 1, 1);
-  for(int i = 0; i < 64; i++)
-  {	  
-	  if(lightInfo[i].origin_radius.w == 0)
-		  continue;
-	  
-	//bool isBackFacing = dot(normal, WorldRayDirection()) > 0.f;
-	//if (isBackFacing)
-	//	normal = -normal;
-	  
-	  float3 lightPos = (lightInfo[i].origin_radius.xyz);
-	  float3 centerLightDir = lightPos - worldOrigin;
-	  float lightDistance = length(centerLightDir);
-	  float falloff = attenuation(lightInfo[i].origin_radius.w, 1.0, lightDistance);  
-	  
-	  //bool isShadowed = dot(normal, centerLightDir) < 0;	  
-	  //if(!isShadowed)
-	  {
-		    if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance))
-			{
-				ndotl += float3(1, 1, 1) * falloff * 2; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
-			}
-	  }	  
-	//  debug = normal;
+  
+  // 2 is emissive
+  if(BTriVertex[vertId + 0].st.z != 2)
+  {
+	for(int i = 0; i < 64; i++)
+	{	  
+		if(lightInfo[i].origin_radius.w == 0)
+			continue;
+		
+		//bool isBackFacing = dot(normal, WorldRayDirection()) > 0.f;
+		//if (isBackFacing)
+		//	normal = -normal;
+		
+		float3 lightPos = (lightInfo[i].origin_radius.xyz);
+		float3 centerLightDir = lightPos - worldOrigin;
+		float lightDistance = length(centerLightDir);
+		float falloff = attenuation(lightInfo[i].origin_radius.w * 1.2, 1.0, lightDistance);  
+		
+		//bool isShadowed = dot(normal, centerLightDir) < 0;	  
+		//if(!isShadowed)
+		{
+				if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance))
+				{
+					ndotl += float3(1, 1, 1) * falloff * 2; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
+				}
+		}	  
+		//  debug = normal;
+	}
+  }
+  else
+  {
+	ndotl = float3(1, 1, 1);
   }
   
   for(int i = 4; i < 9; i++)
@@ -227,7 +236,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 	  }
 	  
 	  u = frac(u) / 4096;
-	  v = frac(v) / 4096;
+	  v = frac(1.0 - v) / 4096;
 	  
 	  u = u * BTriVertex[vertId + 0].vtinfo.z;
 	  v = v * BTriVertex[vertId + 0].vtinfo.w;
