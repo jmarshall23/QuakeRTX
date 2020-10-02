@@ -2058,29 +2058,15 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 	currentmodel = bspMod;
 
 	// Mark Surfaces 
-	for (i = 0; i < mod->numsubmodels; i++)
+	for (i = 1; i < mod->numsubmodels; i++)
 	{
 		bm = &mod->submodels[i];
-
-		mod->hulls[0].firstclipnode = bm->headnode[0];
-		for (j = 1; j < MAX_MAP_HULLS; j++)
+		for (int d = 0; d < bm->numfaces; d++)
 		{
-			mod->hulls[j].firstclipnode = bm->headnode[j];
-			mod->hulls[j].lastclipnode = mod->numclipnodes - 1;
-		}
-
-		mod->firstmodelsurface = bm->firstface;
-		mod->nummodelsurfaces = bm->numfaces;
-
-		if (i > 0)
-		{
-			for (int d = 0; d < mod->nummodelsurfaces; d++)
-			{
-				mod->surfaces[mod->firstmodelsurface + d].bmodelindex = i + 1;
-			}
+			mod->surfaces[bm->firstface + d].bmodelindex = i + 1;
 		}
 	}
-
+	mod = bspMod;
 	bspMod->dxrModel = GL_LoadDXRMesh(bspMod->surfaces, bspMod->numsurfaces);
 //
 // set up the submodels (FIXME: this is confusing)
@@ -2098,16 +2084,6 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 
 		mod->firstmodelsurface = bm->firstface;
 		mod->nummodelsurfaces = bm->numfaces;
-
-		// jmarshall
-			//	if (i > 0)
-		{
-			for (int d = 0; d < mod->nummodelsurfaces; d++)
-			{
-				mod->surfaces[mod->firstmodelsurface + d].bmodelindex = i + 1;
-			}
-		}
-		// jmarshall end
 
 		VectorCopy(bm->maxs, mod->maxs);
 		VectorCopy(bm->mins, mod->mins);
@@ -2140,11 +2116,12 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 
 			sprintf(name, "*%i", i + 1);
 			loadmodel = Mod_FindName(name);
+			qboolean loadDXRMesh = loadmodel->dxrModel == NULL;
 			*loadmodel = *mod;
-			loadmodel->dxrModel = NULL;
+			if(loadDXRMesh)
 			{
 				currentmodel = loadmodel;
-				loadmodel->dxrModel = GL_LoadDXRMesh(&mod->surfaces[mod->firstmodelsurface], mod->nummodelsurfaces);
+				loadmodel->dxrModel = GL_LoadDXRMesh(&mod->surfaces[mod->submodels[i + 1].firstface], mod->submodels[i + 1].numfaces);
 			}
 			strcpy(loadmodel->name, name);
 			mod = loadmodel;

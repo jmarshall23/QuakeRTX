@@ -13,6 +13,27 @@ ComPtr<ID3D12Resource> m_vertexBuffer;
 D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 std::vector<dxrVertex_t> sceneVertexes;
 
+void GL_DumpSceneVertexes(void) {
+	// Write Obj test	
+	{
+		FILE* f = fopen("test.obj", "wb");
+	
+		for (int i = 0; i < sceneVertexes.size(); i++) {
+			fprintf(f, "v %f %f %f\n", sceneVertexes[i].xyz[0], sceneVertexes[i].xyz[2], -sceneVertexes[i].xyz[1]);
+		}
+	
+		for (int i = 0; i < sceneVertexes.size(); i += 3) {
+			int idx1 = i + 0;
+			int idx2 = i + 1;
+			int idx3 = i + 2;
+	
+			fprintf(f, "f %d %d %d\n", idx1 + 1, idx2 + 1, idx3 + 1);
+		}
+	
+		fclose(f);
+	}
+}
+
 void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int numSurfaces) {
 	glpoly_t* p;
 
@@ -100,26 +121,6 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 			}
 		}
 	}
-
-	// Write Obj test
-	//if (m->numTris > 300)
-	//{
-	//	FILE* f = fopen("test.obj", "wb");
-	//
-	//	for (int i = 0; i < mesh->numSceneVertexes; i++) {
-	//		fprintf(f, "v %f %f %f\n", sceneVertexes[mesh->startSceneVertex + i].xyz[0], sceneVertexes[mesh->startSceneVertex + i].xyz[2], -sceneVertexes[mesh->startSceneVertex + i].xyz[1]);
-	//	}
-	//
-	//	for (int i = 0; i < mesh->numSceneVertexes; i += 3) {
-	//		int idx1 = i + 0;
-	//		int idx2 = i + 1;
-	//		int idx3 = i + 2;
-	//
-	//		fprintf(f, "f %d %d %d\n", idx1 + 1, idx2 + 1, idx3 + 1);
-	//	}
-	//
-	//	fclose(f);
-	//}
 
 	// Calculate the normals
 	{

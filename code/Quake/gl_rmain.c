@@ -769,37 +769,39 @@ void R_RenderScene (void)
 		firstFrameHack = 0;
 	}
 
-	R_SetupScene (); //johnfitz -- this does everything that should be done once per call to RenderScene
-
-	Fog_EnableGFog (); //johnfitz
-
-	Sky_DrawSky (); //johnfitz
-
-	R_DrawWorld ();
+	//R_SetupScene (); //johnfitz -- this does everything that should be done once per call to RenderScene
+	//
+	//Fog_EnableGFog (); //johnfitz
+	//
+	//Sky_DrawSky (); //johnfitz
+	//
+	//R_DrawWorld ();
+	//
+	//S_ExtraUpdate(); // don't let sound get messed up if going slow
 
 	GL_Render(r_refdef.vieworg[0], r_refdef.vieworg[1], r_refdef.vieworg[2], r_refdef.viewangles);
 
-	S_ExtraUpdate (); // don't let sound get messed up if going slow
-
-	R_DrawShadows (); //johnfitz -- render entity shadows
-
-	R_DrawEntitiesOnList (false); //johnfitz -- false means this is the pass for nonalpha entities
-
-	R_DrawWorld_Water (); //johnfitz -- drawn here since they might have transparency
-
-	R_DrawEntitiesOnList (true); //johnfitz -- true means this is the pass for alpha entities
-
-	R_RenderDlights (); //triangle fan dlights -- johnfitz -- moved after water
-
-	R_DrawParticles ();
-
-	Fog_DisableGFog (); //johnfitz
-
-	R_DrawViewModel (); //johnfitz -- moved here from R_RenderView
-
-	R_ShowTris (); //johnfitz
-
-	R_ShowBoundingBoxes (); //johnfitz
+	//S_ExtraUpdate (); // don't let sound get messed up if going slow
+	//
+	//R_DrawShadows (); //johnfitz -- render entity shadows
+	//
+	//R_DrawEntitiesOnList (false); //johnfitz -- false means this is the pass for nonalpha entities
+	//
+	//R_DrawWorld_Water (); //johnfitz -- drawn here since they might have transparency
+	//
+	//R_DrawEntitiesOnList (true); //johnfitz -- true means this is the pass for alpha entities
+	//
+	//R_RenderDlights (); //triangle fan dlights -- johnfitz -- moved after water
+	//
+	//R_DrawParticles ();
+	//
+	//Fog_DisableGFog (); //johnfitz
+	//
+	//R_DrawViewModel (); //johnfitz -- moved here from R_RenderView
+	//
+	//R_ShowTris (); //johnfitz
+	//
+	//R_ShowBoundingBoxes (); //johnfitz
 }
 
 //static GLuint r_scaleview_texture;

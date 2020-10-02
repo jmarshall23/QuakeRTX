@@ -35,6 +35,8 @@ void* GL_LoadDXRMesh(msurface_t* surfaces, int numSurfaces);
 
 void GL_Set2D (void);
 
+void GL_DumpSceneVertexes(void);
+
 int VID_GetCurrentWidth(void);
 int VID_GetCurrentHeight(void);
 
