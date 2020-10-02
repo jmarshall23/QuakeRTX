@@ -227,7 +227,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 	  }
 	  
 	  u = frac(u) / 4096;
-	  v = frac(1 - v) / 4096;
+	  v = frac(v) / 4096;
 	  
 	  u = u * BTriVertex[vertId + 0].vtinfo.z;
 	  v = v * BTriVertex[vertId + 0].vtinfo.w;

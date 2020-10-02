@@ -159,18 +159,25 @@ void GL_AliasVertexToDxrVertex(trivertx_t inVert, stvert_t stvert, dxrVertex_t &
 	vertex.xyz[0] = inVert.v[0];
 	vertex.xyz[1] = inVert.v[1];
 	vertex.xyz[2] = inVert.v[2];
-	vertex.st[0] = (stvert.s + 0.5) / w;
-	vertex.st[1] = (stvert.t + 0.5) / h;
+	vertex.st[0] = (stvert.s + 0.5);
+	vertex.st[1] = (stvert.t + 0.5);
 	vertex.st[2] = 0;
 
-	//assert(vertex.st[0] > 1 || vertex.st[1] > 0);
-	if(vertex.st[0] > 1 || vertex.st[1] > 1 || w == -1 || h == -1) {
-		vertex.vtinfo[0] = -1;
-		vertex.vtinfo[1] = -1;
-		vertex.vtinfo[2] = -1;
-		vertex.vtinfo[3] = -1;
+	if(stvert.onseam) {
+		vertex.st[0] += w * 0.5f; // backface.
 	}
-	else
+
+	vertex.st[0] = vertex.st[0] / w;
+	vertex.st[1] = vertex.st[1] / h;
+
+	//assert(vertex.st[0] > 1 || vertex.st[1] > 0);
+	//if(vertex.st[0] > 1 || vertex.st[1] > 1 || w == -1 || h == -1) {
+	//	vertex.vtinfo[0] = -1;
+	//	vertex.vtinfo[1] = -1;
+	//	vertex.vtinfo[2] = -1;
+	//	vertex.vtinfo[3] = -1;
+	//}
+	//else
 	{
 		vertex.vtinfo[0] = x;
 		vertex.vtinfo[1] = y;
@@ -187,7 +194,11 @@ void *GL_LoadDXRAliasMesh(const char* name, int numVertexes, trivertx_t* vertexe
 	mesh->numSceneVertexes = 0;
 
 	float x, y, w, h;
-	GL_FindMegaTile(COM_SkipPath((char *)name), x, y, w, h);
+	char textureName[512];
+	char textureSkinName[512];
+	COM_StripExtension(COM_SkipPath((char*)name), textureName, sizeof(textureName));
+	sprintf(textureSkinName, "%s_skin0", textureName);
+	GL_FindMegaTile(textureSkinName, x, y, w, h);
 	
 	// TODO: Use a index buffer here : )
 	for (int d = 0; d < numTris; d++)

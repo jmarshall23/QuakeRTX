@@ -84,6 +84,16 @@ void GL_LoadMegaTexture(D3D12_CPU_DESCRIPTOR_HANDLE& srvPtr) {
 
 void GL_FindMegaTile(const char *name, float &x, float &y, float &width, float &height)
 {
+	for (int i = 0; i < megaEntries.size(); i++) {
+		if (!strcmp(megaEntries[i].name, name)) {
+			x = megaEntries[i].x;
+			y = megaEntries[i].y;
+			width = megaEntries[i].w;
+			height = megaEntries[i].h;
+			return;
+		}
+	}
+
 	for(int i = 0; i < megaEntries.size(); i++) {
 		if(strstr(megaEntries[i].name, name)) {
 			x = megaEntries[i].x;
@@ -120,7 +130,8 @@ void Tileset_ParseTile(tinyxml2::XMLNode* tile) {
 	const tinyxml2::XMLAttribute* attribute = elem->FirstAttribute();
 
 	MegaEntry_t entry;
-	strcpy(entry.name, attribute->Value());
+
+	COM_StripExtension(attribute->Value(), entry.name, sizeof(entry.name));
 	attribute = attribute->Next();
 	entry.x = atoi(attribute->Value());
 	attribute = attribute->Next();
