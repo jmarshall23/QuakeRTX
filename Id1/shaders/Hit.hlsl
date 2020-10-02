@@ -32,7 +32,7 @@ float3 QuakeCoords(float3 xyz) {
 }
 
 float attenuation(float r, float f, float d) {
-	return pow(max(0.0, 1.0 - (d / r)), f + 1.0);
+	return pow(max(0.0, 1.0 - (d / r)), 1.0);
 }
 
 // Utility function to get a vector perpendicular to an input vector 
@@ -196,14 +196,14 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 		float3 lightPos = (lightInfo[i].origin_radius.xyz);
 		float3 centerLightDir = lightPos - worldOrigin;
 		float lightDistance = length(centerLightDir);
-		float falloff = attenuation(lightInfo[i].origin_radius.w * 1.2, 1.0, lightDistance);  
+		float falloff = attenuation(lightInfo[i].origin_radius.w, 1.0, lightDistance);  
 		
 		//bool isShadowed = dot(normal, centerLightDir) < 0;	  
 		//if(!isShadowed)
 		{
 				if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance))
 				{
-					ndotl += float3(1, 1, 1) * falloff * 2; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
+					ndotl += float3(1, 1, 1) * falloff; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
 				}
 		}	  
 		//  debug = normal;
