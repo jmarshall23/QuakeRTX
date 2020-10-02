@@ -61,6 +61,22 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 			materialInfo = 1;
 		}
 
+		if (strstr(name, "comp1_1")) {
+			materialInfo = 1;
+		}
+
+		if (strstr(name, "comp1_2")) {
+			materialInfo = 1;
+		}
+
+		if (strstr(name, "comp1_3")) {
+			materialInfo = 1;
+		}
+
+		if (strstr(name, "comp1_6")) {
+			materialInfo = 1;
+		}
+
 		if (strstr(name, "ecop1_6")) {
 			materialInfo = 1;
 		}
