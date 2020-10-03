@@ -512,7 +512,8 @@ void Draw_Pic (int x, int y, qpic_t *pic)
 	if (scrap_dirty)
 		Scrap_Upload ();
 	gl = (glpic_t *)pic->data;
-	GL_BlitUIImage(gl->gltexture->texnum, 0, 0, x, y);
+	//GL_BlitUIImage(gl->gltexture->texnum, 0, 0, x, y);
+	GL_BlitUIImageUV(gl->gltexture->texnum, gl->sl, gl->tl, x, y, pic->width, pic->height);
 	//GL_Bind (gl->gltexture);
 	//glBegin (GL_QUADS);
 	//glTexCoord2f (gl->sl, gl->tl);

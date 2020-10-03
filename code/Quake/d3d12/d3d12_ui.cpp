@@ -71,7 +71,27 @@ void GL_BlitUIImageUV(int texnum, float u, float v, int destx, int desty, int w,
 	byte* src = textures[texnum].data;
 	int width = textures[texnum].width;
 	int height = textures[texnum].height;
+	if (w > width)
+		w = width;
+
+	if (h > height)
+		h = height;
+
 	R_CopyImage(src, u * width, v * height, width, (byte*)uiTextureBuffer, destx, desty, g_width, w, h);
+}
+
+/*
+=================
+GL_BlitUIImage
+=================
+*/
+void GL_BlitUIImageUVNoScale(int texnum, float u, float v, int destx, int desty, int w, int h) {
+	if (destx < 0 || desty < 0 || destx + w > g_width || desty + h > g_height)
+		return;
+
+	byte* src = textures[texnum].data;	
+	int width = textures[texnum].width;
+	R_CopyImage(src, u, v, width, (byte*)uiTextureBuffer, destx, desty, g_width, w, h);
 }
 
 /*
