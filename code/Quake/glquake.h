@@ -97,6 +97,8 @@ void GL_BlitUIImageUV(int texnum, float u, float v, int destx, int desty, int w,
 void GL_BlitUIImageUVNoScale(int texnum, float u, float v, int destx, int desty, int w, int h);
 void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radius);
 
+void GL_SetUICanvas(float x, float y, float width, float height);
+
 void R_TimeRefresh_f (void);
 void R_ReadPointFile_f (void);
 texture_t *R_TextureAnimation (texture_t *base, int frame);

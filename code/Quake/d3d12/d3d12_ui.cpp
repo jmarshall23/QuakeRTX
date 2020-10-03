@@ -25,6 +25,18 @@ struct glTexture_t {
 
 
 glTexture_t textures[MAX_LOADED_TEXTURES];
+float canvas_x = 0;
+float canvas_y = 0;
+
+/*
+==============
+GL_SetUICanvas
+==============
+*/
+void GL_SetUICanvas(float x, float y, float width, float height) {
+	canvas_x = x;
+	canvas_y = y;
+}
 
 /*
 ==============
@@ -33,6 +45,9 @@ R_CopyImage
 */
 void R_CopyImage(byte* source, int sourceX, int sourceY, int sourceWidth, byte* dest, int destX, int destY, int destWidth, int width, int height)
 {
+	destX = destX + canvas_x;
+	destY = destY + canvas_y;
+
 	for (int y = 0; y < height; y++)
 	{
 		int _x = 0;

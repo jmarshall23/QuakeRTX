@@ -690,74 +690,76 @@ void GL_SetCanvas (canvastype newcanvas)
 
 	if (newcanvas == currentcanvas)
 		return;
- /*
+
+	int glheight = g_height;
+	int glwidth = g_width;
+ 
 	currentcanvas = newcanvas;
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity ();
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity ();
 
 	switch(newcanvas)
 	{
 	case CANVAS_DEFAULT:
-		glOrtho (0, glwidth, glheight, 0, -99999, 99999);
-		glViewport (glx, gly, glwidth, glheight);
+	//	glOrtho (0, glwidth, glheight, 0, -99999, 99999);
+		GL_SetUICanvas(glx, gly, glwidth, glheight);
 		break;
 	case CANVAS_CONSOLE:
 		lines = vid.conheight - (scr_con_current * vid.conheight / glheight);
-		glOrtho (0, vid.conwidth, vid.conheight + lines, lines, -99999, 99999);
-		glViewport (glx, gly, glwidth, glheight);
+		//glOrtho (0, vid.conwidth, vid.conheight + lines, lines, -99999, 99999);
+		GL_SetUICanvas(glx, gly, glwidth, glheight);
 		break;
 	case CANVAS_MENU:
 		s = q_min((float)glwidth / 320.0, (float)glheight / 200.0);
 		s = CLAMP (1.0, scr_menuscale.value, s);
 		// ericw -- doubled width to 640 to accommodate long keybindings
-		glOrtho (0, 640, 200, 0, -99999, 99999);
-		glViewport (glx + (glwidth - 320*s) / 2, gly + (glheight - 200*s) / 2, 640*s, 200*s);
+		//glOrtho (0, 640, 200, 0, -99999, 99999);
+		GL_SetUICanvas(glx + (glwidth - 320*s) / 2, gly + (glheight - 200*s) / 2, 640*s, 200*s);
 		break;
 	case CANVAS_SBAR:
 		s = CLAMP (1.0, scr_sbarscale.value, (float)glwidth / 320.0);
 		if (cl.gametype == GAME_DEATHMATCH)
 		{
-			glOrtho (0, glwidth / s, 48, 0, -99999, 99999);
-			glViewport (glx, gly, glwidth, 48*s);
+			//glOrtho (0, glwidth / s, 48, 0, -99999, 99999);
+			GL_SetUICanvas(glx, gly, glwidth, 48*s);
 		}
 		else
 		{
-			glOrtho (0, 320, 48, 0, -99999, 99999);
-			glViewport (glx + (glwidth - 320*s) / 2, gly, 320*s, 48*s);
+			//glOrtho (0, 320, 48, 0, -99999, 99999);
+			GL_SetUICanvas(glx + (glwidth - 320*s) / 2, glheight - 48, 320*s, 48*s);
 		}
 		break;
 	case CANVAS_WARPIMAGE:
-		glOrtho (0, 128, 0, 128, -99999, 99999);
-		glViewport (glx, gly+glheight-gl_warpimagesize, gl_warpimagesize, gl_warpimagesize);
+		//glOrtho (0, 128, 0, 128, -99999, 99999);
+		GL_SetUICanvas(glx, gly+glheight-gl_warpimagesize, gl_warpimagesize, gl_warpimagesize);
 		break;
 	case CANVAS_CROSSHAIR: //0,0 is center of viewport
 		s = CLAMP (1.0, scr_crosshairscale.value, 10.0);
-		glOrtho (scr_vrect.width/-2/s, scr_vrect.width/2/s, scr_vrect.height/2/s, scr_vrect.height/-2/s, -99999, 99999);
-		glViewport (scr_vrect.x, glheight - scr_vrect.y - scr_vrect.height, scr_vrect.width & ~1, scr_vrect.height & ~1);
+		//glOrtho (scr_vrect.width/-2/s, scr_vrect.width/2/s, scr_vrect.height/2/s, scr_vrect.height/-2/s, -99999, 99999);
+		GL_SetUICanvas(scr_vrect.x, glheight - scr_vrect.y - scr_vrect.height, scr_vrect.width & ~1, scr_vrect.height & ~1);
 		break;
 	case CANVAS_BOTTOMLEFT: //used by devstats
 		s = (float)glwidth/vid.conwidth; //use console scale
-		glOrtho (0, 320, 200, 0, -99999, 99999);
-		glViewport (glx, gly, 320*s, 200*s);
+		//glOrtho (0, 320, 200, 0, -99999, 99999);
+		GL_SetUICanvas(glx, gly, 320*s, 200*s);
 		break;
 	case CANVAS_BOTTOMRIGHT: //used by fps/clock
 		s = (float)glwidth/vid.conwidth; //use console scale
-		glOrtho (0, 320, 200, 0, -99999, 99999);
-		glViewport (glx+glwidth-320*s, gly, 320*s, 200*s);
+		//glOrtho (0, 320, 200, 0, -99999, 99999);
+		GL_SetUICanvas(glx+glwidth-320*s, gly, 320*s, 200*s);
 		break;
 	case CANVAS_TOPRIGHT: //used by disc
 		s = 1;
-		glOrtho (0, 320, 200, 0, -99999, 99999);
-		glViewport (glx+glwidth-320*s, gly+glheight-200*s, 320*s, 200*s);
+		//glOrtho (0, 320, 200, 0, -99999, 99999);
+		GL_SetUICanvas(glx+glwidth-320*s, gly+glheight-200*s, 320*s, 200*s);
 		break;
 	default:
 		Sys_Error ("GL_SetCanvas: bad canvas type");
 	}
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity ();
-*/
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity ();
 }
 
 /*
