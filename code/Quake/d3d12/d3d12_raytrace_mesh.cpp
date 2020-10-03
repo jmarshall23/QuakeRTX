@@ -46,11 +46,40 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 
 		int materialInfo = 0;
 
+		if(strstr(map_name, "e1m7")) {
+			materialInfo = 1;
+		}
+
 		float x, y, w, h;
 		const char* name = fa->texinfo->texture->name;
 		if(name[0] == '*') {
 			materialInfo = 1;
 			name++;
+		}
+
+		if (strstr(name, "04water")) {
+			name = "water0"; // stupid hack, fix the damn atlas!
+			materialInfo = 3;
+		}
+
+		if (strstr(name, "wizmet")) {
+			materialInfo = 1;
+		}
+
+		if (strstr(name, "wiz1_1")) {
+			materialInfo = 1;
+		}
+
+		if (strstr(name, "wmet")) {
+			materialInfo = 1;
+		}
+
+		if (strstr(name, "city2_7")) {
+			materialInfo = 1;
+		}
+
+		if (strstr(name, "city4_7")) {
+			materialInfo = 1;
 		}
 
 		if (strstr(name, "edoor01_1")) {

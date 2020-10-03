@@ -182,7 +182,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
   float3 debug = float3(1, 1, 1);
   
   // 2 is emissive
-  if(BTriVertex[vertId + 0].st.z != 2)
+  if(BTriVertex[vertId + 0].st.z != 2 && BTriVertex[vertId + 0].st.z != 3)
   {
 	for(int i = 0; i < 64; i++)
 	{	  

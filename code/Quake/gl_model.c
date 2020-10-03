@@ -42,6 +42,8 @@ static int	mod_novis_capacity;
 static byte	*mod_decompressed;
 static int	mod_decompressed_capacity;
 
+char map_name[512];
+
 #define	MAX_MOD_KNOWN	2048 /*johnfitz -- was 512 */
 qmodel_t	mod_known[MAX_MOD_KNOWN];
 int		mod_numknown;
@@ -279,6 +281,10 @@ qmodel_t *Mod_FindName (const char *name)
 
 	if (!name[0])
 		Sys_Error ("Mod_FindName: NULL name"); //johnfitz -- was "Mod_ForName"
+
+	if(strstr(name, ".bsp")) {
+		strcpy(map_name, name);
+	}
 
 //
 // search the currently loaded models
