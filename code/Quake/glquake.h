@@ -33,6 +33,8 @@ void GL_EndRendering(void);
 void GL_Init(HWND hwnd, HINSTANCE hinstance, int width, int height);
 void* GL_LoadDXRMesh(msurface_t* surfaces, int numSurfaces);
 
+void GL_Upload32(unsigned* data, int textureId, int width, int height, qboolean mipmap, qboolean alpha);
+
 void GL_Set2D (void);
 
 void GL_DumpSceneVertexes(void);

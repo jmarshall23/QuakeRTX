@@ -75,6 +75,8 @@ static qboolean	vid_initialized = false;
 static qboolean	vid_locked = false; //johnfitz
 static qboolean	vid_changed = false;
 
+SDL_Window* game_window;
+
 HWND mainWindow;
 
 static void VID_Menu_Init (void); //johnfitz
@@ -432,11 +434,11 @@ static qboolean VID_SetMode (int width, int height, int refreshrate, int bpp, qb
 	g_width = width;
 	g_height = height;
 
-	SDL_Window *window = SDL_CreateWindow(caption, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
+	game_window = SDL_CreateWindow(caption, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
 
 	SDL_SysWMinfo wmInfo;
 	SDL_VERSION(&wmInfo.version);
-	SDL_GetWindowWMInfo(window, &wmInfo);
+	SDL_GetWindowWMInfo(game_window, &wmInfo);
 	mainWindow = wmInfo.info.win.window;
 
 	GL_Init(mainWindow, wmInfo.info.win.hinstance, g_width, g_height);

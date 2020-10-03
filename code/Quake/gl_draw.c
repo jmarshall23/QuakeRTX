@@ -439,7 +439,7 @@ void Draw_CharacterQuad (int x, int y, char num)
 	frow = row*0.0625;
 	fcol = col*0.0625;
 	size = 0.0625;
-
+	GL_BlitUIImageUV(char_texture->texnum, fcol, frow, x, y, 8, 8);
 	//glTexCoord2f (fcol, frow);
 	//glVertex2f (x, y);
 	//glTexCoord2f (fcol + size, frow);
@@ -506,10 +506,13 @@ void Draw_Pic (int x, int y, qpic_t *pic)
 {
 	glpic_t			*gl;
 
+	if (pic == NULL)
+		return;
+
 	if (scrap_dirty)
 		Scrap_Upload ();
 	gl = (glpic_t *)pic->data;
-//	GL_BlitUIImage(gl->gltexture, 0, 0, x, y);
+	GL_BlitUIImage(gl->gltexture->texnum, 0, 0, x, y);
 	//GL_Bind (gl->gltexture);
 	//glBegin (GL_QUADS);
 	//glTexCoord2f (gl->sl, gl->tl);

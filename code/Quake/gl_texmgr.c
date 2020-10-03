@@ -835,59 +835,60 @@ static void TexMgr_LoadImage32 (gltexture_t *glt, unsigned *data)
 {
 	int	internalformat,	miplevel, mipwidth, mipheight, picmip;
 
-	if (!gl_texture_NPOT)
-	{
-		// resample up
-		data = TexMgr_ResampleTexture (data, glt->width, glt->height, glt->flags & TEXPREF_ALPHA);
-		glt->width = TexMgr_Pad(glt->width);
-		glt->height = TexMgr_Pad(glt->height);
-	}
+	//if (!gl_texture_NPOT)
+	//{
+	//	// resample up
+	//	data = TexMgr_ResampleTexture (data, glt->width, glt->height, glt->flags & TEXPREF_ALPHA);
+	//	glt->width = TexMgr_Pad(glt->width);
+	//	glt->height = TexMgr_Pad(glt->height);
+	//}
 
 	// mipmap down
-	picmip = (glt->flags & TEXPREF_NOPICMIP) ? 0 : q_max((int)gl_picmip.value, 0);
-	mipwidth = TexMgr_SafeTextureSize (glt->width >> picmip);
-	mipheight = TexMgr_SafeTextureSize (glt->height >> picmip);
-	while ((int) glt->width > mipwidth)
-	{
-		TexMgr_MipMapW (data, glt->width, glt->height);
-		glt->width >>= 1;
-		if (glt->flags & TEXPREF_ALPHA)
-			TexMgr_AlphaEdgeFix ((byte *)data, glt->width, glt->height);
-	}
-	while ((int) glt->height > mipheight)
-	{
-		TexMgr_MipMapH (data, glt->width, glt->height);
-		glt->height >>= 1;
-		if (glt->flags & TEXPREF_ALPHA)
-			TexMgr_AlphaEdgeFix ((byte *)data, glt->width, glt->height);
-	}
+	//picmip = (glt->flags & TEXPREF_NOPICMIP) ? 0 : q_max((int)gl_picmip.value, 0);
+	//mipwidth = TexMgr_SafeTextureSize (glt->width >> picmip);
+	//mipheight = TexMgr_SafeTextureSize (glt->height >> picmip);
+	//while ((int) glt->width > mipwidth)
+	//{
+	//	TexMgr_MipMapW (data, glt->width, glt->height);
+	//	glt->width >>= 1;
+	//	if (glt->flags & TEXPREF_ALPHA)
+	//		TexMgr_AlphaEdgeFix ((byte *)data, glt->width, glt->height);
+	//}
+	//while ((int) glt->height > mipheight)
+	//{
+	//	TexMgr_MipMapH (data, glt->width, glt->height);
+	//	glt->height >>= 1;
+	//	if (glt->flags & TEXPREF_ALPHA)
+	//		TexMgr_AlphaEdgeFix ((byte *)data, glt->width, glt->height);
+	//}
 
 	// upload
 	GL_Bind (glt);
 	internalformat = (glt->flags & TEXPREF_ALPHA) ? gl_alpha_format : gl_solid_format;
 	//glTexImage2D (GL_TEXTURE_2D, 0, internalformat, glt->width, glt->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	GL_Upload32(data, glt->texnum, glt->width, glt->height, false, false);
 
 	// upload mipmaps
-	if (glt->flags & TEXPREF_MIPMAP)
-	{
-		mipwidth = glt->width;
-		mipheight = glt->height;
-
-		for (miplevel=1; mipwidth > 1 || mipheight > 1; miplevel++)
-		{
-			if (mipwidth > 1)
-			{
-				TexMgr_MipMapW (data, mipwidth, mipheight);
-				mipwidth >>= 1;
-			}
-			if (mipheight > 1)
-			{
-				TexMgr_MipMapH (data, mipwidth, mipheight);
-				mipheight >>= 1;
-			}
-		//	glTexImage2D (GL_TEXTURE_2D, miplevel, internalformat, mipwidth, mipheight, 0, GL_RGBA//, GL_UNSIGNED_BYTE, data);
-		}
-	}
+	//if (glt->flags & TEXPREF_MIPMAP)
+	//{
+	//	mipwidth = glt->width;
+	//	mipheight = glt->height;
+	//
+	//	for (miplevel=1; mipwidth > 1 || mipheight > 1; miplevel++)
+	//	{
+	//		if (mipwidth > 1)
+	//		{
+	//			TexMgr_MipMapW (data, mipwidth, mipheight);
+	//			mipwidth >>= 1;
+	//		}
+	//		if (mipheight > 1)
+	//		{
+	//			TexMgr_MipMapH (data, mipwidth, mipheight);
+	//			mipheight >>= 1;
+	//		}
+	//	//	glTexImage2D (GL_TEXTURE_2D, miplevel, internalformat, mipwidth, mipheight, 0, GL_RGBA//, GL_UNSIGNED_BYTE, data);
+	//	}
+	//}
 
 	// set filter modes
 	TexMgr_SetFilterModes (glt);
@@ -1061,18 +1062,18 @@ gltexture_t *TexMgr_LoadImage (qmodel_t *owner, const char *name, int width, int
 	//upload it
 	mark = Hunk_LowMark();
 
-	//switch (glt->source_format)
-	//{
-	//case SRC_INDEXED:
-	//	TexMgr_LoadImage8 (glt, data);
-	//	break;
-	//case SRC_LIGHTMAP:
-	//	TexMgr_LoadLightmap (glt, data);
-	//	break;
-	//case SRC_RGBA:
-	//	TexMgr_LoadImage32 (glt, (unsigned *)data);
-	//	break;
-	//}
+	switch (glt->source_format)
+	{
+	case SRC_INDEXED:
+		TexMgr_LoadImage8 (glt, data);
+		break;
+	case SRC_LIGHTMAP:
+		TexMgr_LoadLightmap (glt, data);
+		break;
+	case SRC_RGBA:
+		TexMgr_LoadImage32 (glt, (unsigned *)data);
+		break;
+	}
 
 	Hunk_FreeToLowMark(mark);
 

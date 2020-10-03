@@ -495,105 +495,105 @@ void Mod_LoadTextures (lump_t *l)
 		//johnfitz -- lots of changes
 		if (!isDedicated) //no texture uploading for dedicated server
 		{
-			if (!q_strncasecmp(tx->name,"sky",3)) //sky texture //also note -- was Q_strncmp, changed to match qbsp
-				Sky_LoadTexture (tx);
-			else if (tx->name[0] == '*') //warping texture
-			{
-				//external textures -- first look in "textures/mapname/" then look in "textures/"
-				mark = Hunk_LowMark();
-				COM_StripExtension (loadmodel->name + 5, mapname, sizeof(mapname));
-				q_snprintf (filename, sizeof(filename), "textures/%s/#%s", mapname, tx->name+1); //this also replaces the '*' with a '#'
-				data = Image_LoadImage (filename, &fwidth, &fheight);
-				if (!data)
-				{
-					q_snprintf (filename, sizeof(filename), "textures/#%s", tx->name+1);
-					data = Image_LoadImage (filename, &fwidth, &fheight);
-				}
-
-				//now load whatever we found
-				if (data) //load external image
-				{
-					q_strlcpy (texturename, filename, sizeof(texturename));
-					tx->gltexture = TexMgr_LoadImage (loadmodel, texturename, fwidth, fheight,
-						SRC_RGBA, data, filename, 0, TEXPREF_NONE);
-				}
-				else //use the texture from the bsp file
-				{
-					q_snprintf (texturename, sizeof(texturename), "%s:%s", loadmodel->name, tx->name);
-					offset = (src_offset_t)(mt+1) - (src_offset_t)mod_base;
-					tx->gltexture = TexMgr_LoadImage (loadmodel, texturename, tx->width, tx->height,
-						SRC_INDEXED, (byte *)(tx+1), loadmodel->name, offset, TEXPREF_NONE);
-				}
-
-				//now create the warpimage, using dummy data from the hunk to create the initial image
-				Hunk_Alloc (gl_warpimagesize*gl_warpimagesize*4); //make sure hunk is big enough so we don't reach an illegal address
-				Hunk_FreeToLowMark (mark);
-				q_snprintf (texturename, sizeof(texturename), "%s_warp", texturename);
-				tx->warpimage = TexMgr_LoadImage (loadmodel, texturename, gl_warpimagesize,
-					gl_warpimagesize, SRC_RGBA, hunk_base, "", (src_offset_t)hunk_base, TEXPREF_NOPICMIP | TEXPREF_WARPIMAGE);
-				tx->update_warp = true;
-			}
-			else //regular texture
-			{
-				// ericw -- fence textures
-				int	extraflags;
-
-				extraflags = 0;
-				if (tx->name[0] == '{')
-					extraflags |= TEXPREF_ALPHA;
-				// ericw
-
-				//external textures -- first look in "textures/mapname/" then look in "textures/"
-				mark = Hunk_LowMark ();
-				COM_StripExtension (loadmodel->name + 5, mapname, sizeof(mapname));
-				q_snprintf (filename, sizeof(filename), "textures/%s/%s", mapname, tx->name);
-				data = Image_LoadImage (filename, &fwidth, &fheight);
-				if (!data)
-				{
-					q_snprintf (filename, sizeof(filename), "textures/%s", tx->name);
-					data = Image_LoadImage (filename, &fwidth, &fheight);
-				}
-
-				//now load whatever we found
-				if (data) //load external image
-				{
-					tx->gltexture = TexMgr_LoadImage (loadmodel, filename, fwidth, fheight,
-						SRC_RGBA, data, filename, 0, TEXPREF_MIPMAP | extraflags );
-
-					//now try to load glow/luma image from the same place
-					Hunk_FreeToLowMark (mark);
-					q_snprintf (filename2, sizeof(filename2), "%s_glow", filename);
-					data = Image_LoadImage (filename2, &fwidth, &fheight);
-					if (!data)
-					{
-						q_snprintf (filename2, sizeof(filename2), "%s_luma", filename);
-						data = Image_LoadImage (filename2, &fwidth, &fheight);
-					}
-
-					if (data)
-						tx->fullbright = TexMgr_LoadImage (loadmodel, filename2, fwidth, fheight,
-							SRC_RGBA, data, filename, 0, TEXPREF_MIPMAP | extraflags );
-				}
-				else //use the texture from the bsp file
-				{
-					q_snprintf (texturename, sizeof(texturename), "%s:%s", loadmodel->name, tx->name);
-					offset = (src_offset_t)(mt+1) - (src_offset_t)mod_base;
-					if (Mod_CheckFullbrights ((byte *)(tx+1), pixels))
-					{
-						tx->gltexture = TexMgr_LoadImage (loadmodel, texturename, tx->width, tx->height,
-							SRC_INDEXED, (byte *)(tx+1), loadmodel->name, offset, TEXPREF_MIPMAP | TEXPREF_NOBRIGHT | extraflags);
-						q_snprintf (texturename, sizeof(texturename), "%s:%s_glow", loadmodel->name, tx->name);
-						tx->fullbright = TexMgr_LoadImage (loadmodel, texturename, tx->width, tx->height,
-							SRC_INDEXED, (byte *)(tx+1), loadmodel->name, offset, TEXPREF_MIPMAP | TEXPREF_FULLBRIGHT | extraflags);
-					}
-					else
-					{
-						tx->gltexture = TexMgr_LoadImage (loadmodel, texturename, tx->width, tx->height,
-							SRC_INDEXED, (byte *)(tx+1), loadmodel->name, offset, TEXPREF_MIPMAP | extraflags);
-					}
-				}
-				Hunk_FreeToLowMark (mark);
-			}
+			//if (!q_strncasecmp(tx->name,"sky",3)) //sky texture //also note -- was Q_strncmp, changed to match qbsp
+			//	Sky_LoadTexture (tx);
+			//else if (tx->name[0] == '*') //warping texture
+			//{
+			//	//external textures -- first look in "textures/mapname/" then look in "textures/"
+			//	mark = Hunk_LowMark();
+			//	COM_StripExtension (loadmodel->name + 5, mapname, sizeof(mapname));
+			//	q_snprintf (filename, sizeof(filename), "textures/%s/#%s", mapname, tx->name+1); //this also replaces the '*' with a '#'
+			//	data = Image_LoadImage (filename, &fwidth, &fheight);
+			//	if (!data)
+			//	{
+			//		q_snprintf (filename, sizeof(filename), "textures/#%s", tx->name+1);
+			//		data = Image_LoadImage (filename, &fwidth, &fheight);
+			//	}
+			//
+			//	//now load whatever we found
+			//	if (data) //load external image
+			//	{
+			//		q_strlcpy (texturename, filename, sizeof(texturename));
+			//		tx->gltexture = TexMgr_LoadImage (loadmodel, texturename, fwidth, fheight,
+			//			SRC_RGBA, data, filename, 0, TEXPREF_NONE);
+			//	}
+			//	else //use the texture from the bsp file
+			//	{
+			//		q_snprintf (texturename, sizeof(texturename), "%s:%s", loadmodel->name, tx->name);
+			//		offset = (src_offset_t)(mt+1) - (src_offset_t)mod_base;
+			//		tx->gltexture = TexMgr_LoadImage (loadmodel, texturename, tx->width, tx->height,
+			//			SRC_INDEXED, (byte *)(tx+1), loadmodel->name, offset, TEXPREF_NONE);
+			//	}
+			//
+			//	//now create the warpimage, using dummy data from the hunk to create the initial image
+			//	Hunk_Alloc (gl_warpimagesize*gl_warpimagesize*4); //make sure hunk is big enough so we don't reach an illegal address
+			//	Hunk_FreeToLowMark (mark);
+			//	q_snprintf (texturename, sizeof(texturename), "%s_warp", texturename);
+			//	tx->warpimage = TexMgr_LoadImage (loadmodel, texturename, gl_warpimagesize,
+			//		gl_warpimagesize, SRC_RGBA, hunk_base, "", (src_offset_t)hunk_base, TEXPREF_NOPICMIP | TEXPREF_WARPIMAGE);
+			//	tx->update_warp = true;
+			//}
+			//else //regular texture
+			//{
+			//	// ericw -- fence textures
+			//	int	extraflags;
+			//
+			//	extraflags = 0;
+			//	if (tx->name[0] == '{')
+			//		extraflags |= TEXPREF_ALPHA;
+			//	// ericw
+			//
+			//	//external textures -- first look in "textures/mapname/" then look in "textures/"
+			//	mark = Hunk_LowMark ();
+			//	COM_StripExtension (loadmodel->name + 5, mapname, sizeof(mapname));
+			//	q_snprintf (filename, sizeof(filename), "textures/%s/%s", mapname, tx->name);
+			//	data = Image_LoadImage (filename, &fwidth, &fheight);
+			//	if (!data)
+			//	{
+			//		q_snprintf (filename, sizeof(filename), "textures/%s", tx->name);
+			//		data = Image_LoadImage (filename, &fwidth, &fheight);
+			//	}
+			//
+			//	//now load whatever we found
+			//	if (data) //load external image
+			//	{
+			//		tx->gltexture = TexMgr_LoadImage (loadmodel, filename, fwidth, fheight,
+			//			SRC_RGBA, data, filename, 0, TEXPREF_MIPMAP | extraflags );
+			//
+			//		//now try to load glow/luma image from the same place
+			//		Hunk_FreeToLowMark (mark);
+			//		q_snprintf (filename2, sizeof(filename2), "%s_glow", filename);
+			//		data = Image_LoadImage (filename2, &fwidth, &fheight);
+			//		if (!data)
+			//		{
+			//			q_snprintf (filename2, sizeof(filename2), "%s_luma", filename);
+			//			data = Image_LoadImage (filename2, &fwidth, &fheight);
+			//		}
+			//
+			//		if (data)
+			//			tx->fullbright = TexMgr_LoadImage (loadmodel, filename2, fwidth, fheight,
+			//				SRC_RGBA, data, filename, 0, TEXPREF_MIPMAP | extraflags );
+			//	}
+			//	else //use the texture from the bsp file
+			//	{
+			//		q_snprintf (texturename, sizeof(texturename), "%s:%s", loadmodel->name, tx->name);
+			//		offset = (src_offset_t)(mt+1) - (src_offset_t)mod_base;
+			//		if (Mod_CheckFullbrights ((byte *)(tx+1), pixels))
+			//		{
+			//			tx->gltexture = TexMgr_LoadImage (loadmodel, texturename, tx->width, tx->height,
+			//				SRC_INDEXED, (byte *)(tx+1), loadmodel->name, offset, TEXPREF_MIPMAP | TEXPREF_NOBRIGHT | extraflags);
+			//			q_snprintf (texturename, sizeof(texturename), "%s:%s_glow", loadmodel->name, tx->name);
+			//			tx->fullbright = TexMgr_LoadImage (loadmodel, texturename, tx->width, tx->height,
+			//				SRC_INDEXED, (byte *)(tx+1), loadmodel->name, offset, TEXPREF_MIPMAP | TEXPREF_FULLBRIGHT | extraflags);
+			//		}
+			//		else
+			//		{
+			//			tx->gltexture = TexMgr_LoadImage (loadmodel, texturename, tx->width, tx->height,
+			//				SRC_INDEXED, (byte *)(tx+1), loadmodel->name, offset, TEXPREF_MIPMAP | extraflags);
+			//		}
+			//	}
+			//	Hunk_FreeToLowMark (mark);
+			//}
 		}
 		//johnfitz
 	}

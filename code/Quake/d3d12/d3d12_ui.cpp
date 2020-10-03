@@ -51,7 +51,7 @@ GL_BlitUIImage
 */
 void GL_BlitUIImage(int texnum, int srcx, int srcy, int destx, int desty) {
 	byte* src = textures[texnum].data;
-	int width = textures[texnum].width;
+	int width = textures[texnum].width; 
 	int height = textures[texnum].height;
 	if (destx < 0 || desty < 0 || destx + width > g_width || desty + height > g_height)
 		return;
@@ -65,7 +65,7 @@ GL_BlitUIImage
 =================
 */
 void GL_BlitUIImageUV(int texnum, float u, float v, int destx, int desty, int w, int h) {
-	if (destx < 0 || desty < 0)
+	if (destx < 0 || desty < 0 || destx + w > g_width || desty + h > g_height)
 		return;
 
 	byte* src = textures[texnum].data;
