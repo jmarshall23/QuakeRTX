@@ -103,8 +103,11 @@ mleaf_t *Mod_PointInLeaf (vec3_t p, qmodel_t *model)
 	float		d;
 	mplane_t	*plane;
 
-	if (!model || !model->nodes)
+	if (!model || !model->nodes) {
+		//Sys_Printf("Mod_PointInLeaf: bad model\n");
 		Sys_Error ("Mod_PointInLeaf: bad model");
+		return NULL;
+	}
 
 	node = model->nodes;
 	while (1)
@@ -233,12 +236,32 @@ void Mod_ResetAll (void)
 
 	//ericw -- free alias model VBOs
 	//GLMesh_DeleteVertexBuffers ();
-	
+	Cache_Flush();
 	for (i=0 , mod=mod_known ; i<mod_numknown ; i++, mod++)
 	{
 		if (!mod->needload) //otherwise Mod_ClearAll() did it already
 			TexMgr_FreeTexturesForOwner (mod);
 		memset(mod, 0, sizeof(qmodel_t));
+		//memset(mod->name, 0, 64);
+		//mod->needload = true;
+		//mod->numTris = 0;
+		//mod->numsurfaces = 0;
+		//mod->firstmodelsurface = 0;
+		//mod->nummodelsurfaces = 0;
+		//mod->numsubmodels = 0;
+		//mod->numplanes = 0;
+		//mod->numleafs = 0;
+		//mod->numvertexes = 0;
+		//mod->numedges = 0;
+		//mod->numnodes = 0;
+		//mod->numtexinfo = 0;
+		//mod->numsurfaces = 0;
+		//mod->numsurfedges = 0;
+		//mod->numclipnodes = 0;
+		//mod->nummarksurfaces = 0;
+		//mod->numtextures = 0;
+		//mod->bspversion = 0;
+		//mod->cache.data = NULL;
 	}
 	mod_numknown = 0;
 }

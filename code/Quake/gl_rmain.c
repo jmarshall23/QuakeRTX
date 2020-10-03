@@ -57,6 +57,7 @@ mleaf_t		*r_viewleaf, *r_oldviewleaf;
 
 int		d_lightstylevalue[256];	// 8.8 fraction of base light value
 
+int     r_finishDXRInit = 1;
 
 cvar_t	r_norefresh = {"r_norefresh","0",CVAR_NONE};
 cvar_t	r_drawentities = {"r_drawentities","1",CVAR_NONE};
@@ -763,10 +764,10 @@ R_RenderScene
 */
 void R_RenderScene (void)
 {
-	static int firstFrameHack = 1;
-	if (firstFrameHack) {
+	// jmarshall: this is a stupid way to do this. 
+	if (r_finishDXRInit) {
 		GL_FinishDXRLoading(); // todo move me!
-		firstFrameHack = 0;
+		r_finishDXRInit = 0;
 	}
 
 	//R_SetupScene (); //johnfitz -- this does everything that should be done once per call to RenderScene

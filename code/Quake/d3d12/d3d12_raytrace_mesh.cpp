@@ -183,7 +183,7 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 void *GL_LoadDXRMesh(msurface_t *surfaces, int numSurfaces)  {
 	dxrMesh_t* mesh = new dxrMesh_t();
 	
-	mesh->meshId = dxrMeshList.size();
+	//mesh->meshId = dxrMeshList.size();
 	
 	GL_LoadBottomLevelAccelStruct(mesh, surfaces, numSurfaces);
 
@@ -227,7 +227,7 @@ void GL_AliasVertexToDxrVertex(trivertx_t inVert, stvert_t stvert, dxrVertex_t &
 void *GL_LoadDXRAliasMesh(const char* name, int numVertexes, trivertx_t* vertexes, int numTris, mtriangle_t* triangles, stvert_t* stverts) {
 	dxrMesh_t* mesh = new dxrMesh_t();
 	
-	mesh->meshId = dxrMeshList.size();
+	//mesh->meshId = dxrMeshList.size();
 	mesh->startSceneVertex = sceneVertexes.size();
 	mesh->numSceneVertexes = 0;
 

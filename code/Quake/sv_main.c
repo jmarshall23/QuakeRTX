@@ -1327,6 +1327,8 @@ void SV_SpawnServer (const char *server)
 	edict_t		*ent;
 	int			i;
 
+	r_norefresh.value = 1;
+
 	// let's not have any servers with no name
 	if (hostname.string[0] == 0)
 		Cvar_Set ("hostname", "UNNAMED");
@@ -1334,6 +1336,8 @@ void SV_SpawnServer (const char *server)
 
 	Con_DPrintf ("SpawnServer: %s\n",server);
 	svs.changelevel_issued = false;		// now safe to issue another
+
+	GL_ShutdownRaytracingMap();
 
 //
 // tell all connected clients that we are going to a new level
@@ -1411,10 +1415,11 @@ void SV_SpawnServer (const char *server)
 	q_strlcpy (sv.name, server, sizeof(sv.name));
 	q_snprintf (sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", server);
 	sv.worldmodel = Mod_ForName (sv.modelname, false);
+	r_norefresh.value = 0;
 	if (!sv.worldmodel)
 	{
 		Con_Printf ("Couldn't spawn server %s\n", sv.modelname);
-		sv.active = false;
+		sv.active = false;		
 		return;
 	}
 	sv.models[1] = sv.worldmodel;

@@ -128,6 +128,7 @@ copy "$(SolutionDir)\..\SDL\lib64\*.dll" "$(TargetDir)"</Command>
     <ClCompile Include="..\..\Quake\cvar.c" />
     <ClCompile Include="..\..\Quake\d3d12\d3d12_composite.cpp" />
     <ClCompile Include="..\..\Quake\d3d12\d3d12_main.cpp" />
+    <ClCompile Include="..\..\Quake\d3d12\d3d12_raytrace_cleanup.cpp" />
     <ClCompile Include="..\..\Quake\d3d12\d3d12_raytrace_entities.cpp" />
     <ClCompile Include="..\..\Quake\d3d12\d3d12_raytrace_lights.cpp" />
     <ClCompile Include="..\..\Quake\d3d12\d3d12_raytrace_mega.cpp" />

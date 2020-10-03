@@ -74,7 +74,7 @@ void GL_FinishDXRLoading(void);
 void GL_Render(float x, float y, float z, float* viewAngles);
 
 extern int g_width, g_height;
-
+extern int r_finishDXRInit;
 
 extern qmodel_t* currentmodel;
 extern mvertex_t* r_pcurrentvertbase;

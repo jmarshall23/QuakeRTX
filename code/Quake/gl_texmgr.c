@@ -763,9 +763,10 @@ static unsigned *TexMgr_8to32 (byte *in, int pixels, unsigned int *usepal)
 {
 	int i;
 	unsigned *out, *data;
-
-	out = data = (unsigned *) Hunk_Alloc(pixels*4);
-
+	static byte temp_memory[8192 * 8192 * 4];
+// jmarshall
+	out = data = &temp_memory[0]; // (unsigned*)Hunk_Alloc(pixels * 4);
+// jmarshall end
 	for (i = 0; i < pixels; i++)
 		*out++ = usepal[*in++];
 

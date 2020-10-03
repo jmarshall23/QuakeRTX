@@ -102,8 +102,11 @@ void GL_CreateTopLevelAccelerationStructs(bool forceUpdate) {
 	// Add the view entity
 	{
 		entity_t* currententity = &cl.viewent;
-		dxrMesh_t* mesh = (dxrMesh_t*)currententity->model->dxrModel[GL_GetCurrentFrame(currententity, currententity->frame)];
-		create_entity_matrix(&currententity->dxrTransform[0], currententity, false);
+		if (currententity->model)
+		{
+			dxrMesh_t* mesh = (dxrMesh_t*)currententity->model->dxrModel[GL_GetCurrentFrame(currententity, currententity->frame)];
+			create_entity_matrix(&currententity->dxrTransform[0], currententity, false);
+		}
 	}
 
 	bool onlyUpdate = false; // (numProcessedEntities == r_currentDxrEntities);
@@ -142,9 +145,12 @@ void GL_CreateTopLevelAccelerationStructs(bool forceUpdate) {
 		// Add the view entity
 		{
 			entity_t* currententity = &cl.viewent;
-			dxrMesh_t* mesh = (dxrMesh_t*)currententity->model->dxrModel[GL_GetCurrentFrame(currententity, currententity->frame)];
-			meshInstanceData[cl_numvisedicts + 1].startVertex = mesh->startSceneVertex;
-			m_topLevelASGenerator.AddInstance(mesh->buffers.pResult.Get(), (DirectX::XMMATRIX&)currententity->dxrTransform, cl_numvisedicts + 1, 0);
+			if (currententity->model)
+			{
+				dxrMesh_t* mesh = (dxrMesh_t*)currententity->model->dxrModel[GL_GetCurrentFrame(currententity, currententity->frame)];
+				meshInstanceData[cl_numvisedicts + 1].startVertex = mesh->startSceneVertex;
+				m_topLevelASGenerator.AddInstance(mesh->buffers.pResult.Get(), (DirectX::XMMATRIX&)currententity->dxrTransform, cl_numvisedicts + 1, 0);
+			}
 		}
 
 		// Update our instance info.

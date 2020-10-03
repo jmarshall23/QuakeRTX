@@ -30,6 +30,16 @@ tr_buffer* sceneLightInfoBuffer;
 
 /*
 ===============
+GL_ClearLights
+===============
+*/
+void GL_ClearLights(void) {
+	memset(&worldLights[0], 0, sizeof(worldLights));
+	numWorldLights = 0;
+}
+
+/*
+===============
 GL_FindTouchedLeafs
 ===============
 */
