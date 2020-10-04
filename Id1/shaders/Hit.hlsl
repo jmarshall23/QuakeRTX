@@ -200,6 +200,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 		
 		//bool isShadowed = dot(normal, centerLightDir) < 0;	  
 		//if(!isShadowed)
+		if(falloff > 0)
 		{
 				if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance))
 				{
