@@ -61,7 +61,7 @@ void GL_FindTouchedLeafs(glLight_t* ent, mnode_t* node)
 			return;
 
 		leaf = (mleaf_t*)node;
-		leafnum = leaf - sv.worldmodel->leafs - 1;
+		leafnum = leaf - loadmodel->leafs - 1;
 
 		ent->leafnums[ent->num_leafs] = leafnum;
 		ent->num_leafs++;
@@ -97,7 +97,7 @@ void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radiu
 
 	light.ent = ent;
 	light.num_leafs = 0;
-	GL_FindTouchedLeafs(&light, SV_GetMapNodes());
+	GL_FindTouchedLeafs(&light, loadmodel->nodes);
 
 	worldLights[numWorldLights++] = light;
 }
@@ -150,7 +150,7 @@ void GL_BuildLightList(float x, float y, float z) {
 
 		glLight_t * ent = &worldLights[i];
 		vec3_t viewpos = { x, y, z };
-		byte* pvs = SV_FatPVS(viewpos, sv.worldmodel);
+		byte* pvs = SV_FatPVS(viewpos, cl.worldmodel);
 
 		int d;
 		for (d = 0; d < ent->num_leafs; d++)

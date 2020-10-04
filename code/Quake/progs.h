@@ -42,6 +42,8 @@ typedef struct edict_s
 	qboolean	free;
 	link_t		area;			/* linked to a division node or leaf */
 
+	char	clientClassName[256];
+	vec3_t  clientOrigin;
 	int     light;
 
 	int		num_leafs;

@@ -127,6 +127,7 @@ extern "C" {
 	mnode_t* SV_GetMapNodes(void);
 	extern cvar_t		scr_fov;
 	extern char map_name[512];
+	extern qmodel_t* loadmodel;
 };
 
 void GL_BuildLightList(float x, float y, float z);

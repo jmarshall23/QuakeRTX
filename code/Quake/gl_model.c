@@ -817,6 +817,133 @@ void Mod_LoadVisibility (lump_t *l)
 
 
 /*
+====================
+Mod_ParseEdict
+====================
+*/
+const char* Mod_ParseEdict(const char* data, edict_t* ent, qboolean skipClearHack)
+{
+	ddef_t* key;
+	char		keyname[256];
+	qboolean	anglehack, init;
+	int		n;
+
+	init = false;
+
+	// clear it
+	if (ent != sv.edicts && !skipClearHack)	// hack
+		memset(&ent->v, 0, progs->entityfields * 4);
+
+	// go through all the dictionary pairs
+	while (1)
+	{
+		// parse key
+		data = COM_Parse(data);
+		if (com_token[0] == '}')
+			break;
+		if (!data)
+			Host_Error("ED_ParseEntity: EOF without closing brace");
+
+		// anglehack is to allow QuakeEd to write single scalar angles
+		// and allow them to be turned into vectors. (FIXME...)
+		if (!strcmp(com_token, "angle"))
+		{
+			strcpy(com_token, "angles");
+			anglehack = true;
+		}
+		else
+			anglehack = false;
+
+		// FIXME: change light to _light to get rid of this hack
+		if (!strcmp(com_token, "light"))
+			strcpy(com_token, "light_lev");	// hack for single light def
+
+		q_strlcpy(keyname, com_token, sizeof(keyname));
+
+		// another hack to fix keynames with trailing spaces
+		n = strlen(keyname);
+		while (n && keyname[n - 1] == ' ')
+		{
+			keyname[n - 1] = 0;
+			n--;
+		}
+
+		// parse value
+		data = COM_Parse(data);
+		if (!data)
+			Host_Error("ED_ParseEntity: EOF without closing brace");
+
+		if (com_token[0] == '}')
+			Host_Error("ED_ParseEntity: closing brace without data");
+
+		init = true;
+
+		// keynames with a leading underscore are used for utility comments,
+		// and are immediately discarded by quake
+		if (keyname[0] == '_')
+			continue;
+
+		//johnfitz -- hack to support .alpha even when progs.dat doesn't know about it
+		if (!strcmp(keyname, "alpha"))
+			ent->alpha = ENTALPHA_ENCODE(atof(com_token));
+		//johnfitz
+
+		//key = ED_FindField(keyname);
+		//if (!key)
+		//{
+		//	//johnfitz -- HACK -- suppress error becuase fog/sky/alpha fields might not be mentioned in defs.qc
+		//	if (strncmp(keyname, "sky", 3) && strcmp(keyname, "fog") && strcmp(keyname, "alpha"))
+		//		Con_DPrintf("\"%s\" is not a field\n", keyname); //johnfitz -- was Con_Printf
+		//	continue;
+		//}
+		//
+		//if (anglehack)
+		//{
+		//	char	temp[32];
+		//	strcpy(temp, com_token);
+		//	sprintf(com_token, "0 %s 0", temp);
+		//}
+		//
+		//if (!ED_ParseEpair((void*)&ent->v, key, com_token))
+		//	Host_Error("ED_ParseEdict: parse error");
+
+		if (!strcmp(keyname, "classname")) {
+			//ent->light = atof(com_token);
+			strcpy(ent->clientClassName, com_token);
+		}
+
+		if (!strcmp(keyname, "origin")) {
+			char* v, * w;
+			char* end;
+			char	string[128];
+			q_strlcpy(string, com_token, sizeof(string));
+			end = (char*)string + strlen(string);
+			v = string;
+			w = string;
+
+			for (int i = 0; i < 3 && (w <= end); i++) // ericw -- added (w <= end) check
+			{
+				// set v to the next space (or 0 byte), and change that char to a 0 byte
+				while (*v && *v != ' ')
+					v++;
+				*v = 0;
+				ent->clientOrigin[i] = atof(w);
+				w = v = v + 1;
+			}
+		}
+
+		if (!strcmp(keyname, "light_lev")) {
+			ent->light = atof(com_token);
+		}
+	}
+
+	if (!init)
+		ent->free = true;
+
+	return data;
+}
+
+/*
 =================
 Mod_LoadEntities
 =================
@@ -851,6 +978,75 @@ void Mod_LoadEntities (lump_t *l)
 			loadmodel->entities = ents;
 			Con_DPrintf("Loaded external entity file %s\n", entfilename);
 			return;
+		}
+	}
+
+	const char* data = (dvertex_t*)(mod_base + l->fileofs);
+
+	// parse ents
+	static edict_t ent;
+	while (1)
+	{
+		memset(&ent, 0, sizeof(edict_t));
+
+		// parse the opening brace
+		data = COM_Parse(data);
+		if (!data)
+			break;
+		if (com_token[0] != '{')
+			Host_Error("ED_LoadFromFile: found %s when expecting {", com_token);
+
+
+		data = Mod_ParseEdict(data, &ent, true);
+
+		const char* entityName = ent.clientClassName;
+		if (strstr(entityName, "light")) {
+			vec3_t origin;
+			origin[0] = ent.clientOrigin[0];
+			origin[1] = ent.clientOrigin[1];
+			origin[2] = ent.clientOrigin[2];
+
+			if (strstr(entityName, "torch") || strstr(entityName, "candle")) {
+				//vec3_t dirs[4] = { { 60, 0, 0 },
+				//				   { -60, 0, 0 },
+				//				   { 0, 60, 0},
+				//				   { 0, -60, 0} };
+				//
+				//for (int f = 0; f < 4; f++)
+				//{
+				//	trace_t trace;
+				//	vec3_t end;
+				//	vec3_t mins = { -5, -5, -5 };
+				//	vec3_t maxs = { -5, -5, -5 };
+				//
+				//	end[0] = origin[0] + dirs[f][0];
+				//	end[1] = origin[1] + dirs[f][1];
+				//	end[2] = origin[2] + dirs[f][2];
+				//
+				//	trace = SV_Move(origin, mins, maxs, end, false, &ent);
+				//
+				//	if (trace.fraction < 0.5) {
+				//		origin[0] += trace.plane.normal[0] * 20;
+				//		origin[1] += trace.plane.normal[1] * 20;
+				//		//origin[2] += 20.0f;
+				//		break;
+				//	}
+				//}
+				origin[2] += 20.0f;
+			}
+
+			if (ent.light == 0) {
+				ent.light = 200;
+			}
+
+			GL_RegisterWorldLight(&ent, origin[0], origin[1], origin[2], ent.light);
+		}
+		else if (ent.light > 0) {
+			vec3_t origin;
+			origin[0] = ent.clientOrigin[0];
+			origin[1] = ent.clientOrigin[1];
+			origin[2] = ent.clientOrigin[2];
+			GL_RegisterWorldLight(&ent, origin[0], origin[1], origin[2], ent.light);
 		}
 	}
 
@@ -2072,10 +2268,10 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 	Mod_LoadLeafs (&header->lumps[LUMP_LEAFS], bsp2);
 	Mod_LoadNodes (&header->lumps[LUMP_NODES], bsp2);
 	Mod_LoadClipnodes (&header->lumps[LUMP_CLIPNODES], bsp2);
-	Mod_LoadEntities (&header->lumps[LUMP_ENTITIES]);
-	Mod_LoadSubmodels (&header->lumps[LUMP_MODELS]);
+	Mod_MakeHull0();
 
-	Mod_MakeHull0 ();
+	Mod_LoadEntities (&header->lumps[LUMP_ENTITIES]);
+	Mod_LoadSubmodels (&header->lumps[LUMP_MODELS]);	
 
 	mod->numframes = 2;		// regular and alternate animation
 

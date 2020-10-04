@@ -1016,58 +1016,6 @@ void ED_LoadFromFile (const char *data)
 			continue;
 		}
 
-// jmarshall -- register our lights
-		const char* entityName = PR_GetString(ent->v.classname);
-		if (strstr(entityName, "light")) {
-			vec3_t origin;
-			origin[0] = ent->v.origin[0];
-			origin[1] = ent->v.origin[1];
-			origin[2] = ent->v.origin[2];
-
-			if (strstr(entityName, "torch") || strstr(entityName, "candle")) {
-				vec3_t dirs[4] = { { 60, 0, 0 },
-								   { -60, 0, 0 },
-								   { 0, 60, 0},
-								   { 0, -60, 0} };
-				
-				for (int f = 0; f < 4; f++)
-				{
-					trace_t trace;				
-					vec3_t end;
-					vec3_t mins = { -5, -5, -5 };
-					vec3_t maxs = { -5, -5, -5 };
-				
-					end[0] = origin[0] + dirs[f][0];
-					end[1] = origin[1] + dirs[f][1];
-					end[2] = origin[2] + dirs[f][2];
-				
-					trace = SV_Move(origin, mins, maxs, end, false, ent);
-				
-					if(trace.fraction < 0.5) {
-						origin[0] += trace.plane.normal[0] * 20;
-						origin[1] += trace.plane.normal[1] * 20;
-						//origin[2] += 20.0f;
-						break;
-					}
-				}
-				//origin[2] += 20.0f;
-			}
-
-			if (ent->light == 0) {
-				ent->light = 200;
-			}
-
-			GL_RegisterWorldLight(ent, origin[0], origin[1], origin[2], ent->light);
-		}
-		else if (ent->light > 0) {
-			vec3_t origin;
-			origin[0] = ent->v.origin[0];
-			origin[1] = ent->v.origin[1];
-			origin[2] = ent->v.origin[2];
-			GL_RegisterWorldLight(ent, origin[0], origin[1], origin[2], ent->light);
-		}
-// jmarshall end
-
 //
 // immediately call spawn function
 //
