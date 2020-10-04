@@ -3,11 +3,16 @@
 // #DXR Extra: Perspective Camera
 cbuffer CameraParams : register(b0)
 {
-  float4x4 view;
+  float4 timeViewOrg;
+  float4 skyInfo;
+  float4 notUsed;
+  float4 notUsed1;
   float4x4 projection;
   float4x4 viewI;
   float4x4 projectionI;
 }
+
+Texture2D<float4> MegaTexture : register(t1);
 
 // Raytracing output texture, accessed as a UAV
 RWTexture2D<float4> gOutput : register(u0);
@@ -15,6 +20,33 @@ RWTexture2D<float4> gLightOutput : register(u1);
 
 // Raytracing acceleration structure, accessed as a SRV
 RaytracingAccelerationStructure SceneBVH : register(t0);
+
+float3 clouds(float3 rd) {
+	rd = float3(rd.x, rd.z, -rd.y);
+
+	int t = timeViewOrg[0];
+    float ctime = t / 14.0;
+    float2 uv = rd.xz / (rd.y + 0.6);
+	float u, v;
+	
+	u = frac(uv.x * 2) / 4096;
+	v = frac(uv.y * 2) / 4096;
+	  
+	u = u * (skyInfo.z / 2);
+	v = v * skyInfo.w;
+	  
+	u = u + (skyInfo.x / 4096);
+	v = v + (skyInfo.y / 4096);
+
+	//u += frac(t * 409 / (skyInfo.z * 2));
+	//float r= fbm(float3(uv.yx * 1.4 + float2(ctime, 0.0), ctime)) * 1.5;
+    //float3 clouds = float3(r, r, r);
+    //
+	//
+    //clouds = pow(clouds, float3(4.0, 4.0, 4.0));
+
+    return MegaTexture.Load(int3(u * 4096, v * 4096, 0)).rgb;
+}
 
 HitInfo FirePrimaryRay() {
 	// Initialize the ray payload
@@ -97,10 +129,29 @@ HitInfo FirePrimaryRay() {
   return payload;
 }
 
+float3 CalculateClouds() {
+	uint2 launchIndex = DispatchRaysIndex().xy;
+	float2 dims = float2(DispatchRaysDimensions().xy);
+	float2 d = (((launchIndex.xy + 0.5f) / dims.xy) * 2.f - 1.f);
+	
+	float4 target = mul(projectionI, float4(d.x, d.y, 1, 1));
+	float3 Origin = mul(viewI, float4(0, 0, 0, 1));
+	float3 Direction = mul(viewI, float4(target.xyz, 0));
+	
+	float3 sky = clouds(Direction);
+	return sky;
+}
+
 [shader("raygeneration")] void RayGen() {
 	HitInfo hit = FirePrimaryRay();
-
-	if(hit.lightColor.w > 0)
+	
+	if(hit.colorAndDistance.w == -1) {
+		float3 sky = CalculateClouds();
+		uint2 launchIndex = DispatchRaysIndex().xy;
+		gOutput[launchIndex] = float4(sky.x, sky.y, sky.z, 1.0);
+		gLightOutput[launchIndex] = float4(1, 1, 1, 1);
+	}
+	else if(hit.lightColor.w > 0)
 	{
 		  uint2 launchIndex = DispatchRaysIndex().xy;
           float2 dims = float2(DispatchRaysDimensions().xy);
@@ -170,7 +221,13 @@ HitInfo FirePrimaryRay() {
 			  // between the hit/miss shaders and the raygen
 			  payload);
 			  
-		   if(hit.lightColor.w == 3)
+		   if(payload.colorAndDistance.w == -1)
+		   {
+				//float3 sky = clouds(ray.Direction);
+				// gOutput[launchIndex] = lerp(gOutput[launchIndex], float4(sky, 1.f), 0.3);
+				//gLightOutput[launchIndex] = lerp(gLightOutput[launchIndex], float4(sky, 1.f), 0.3);
+		   }			  
+		   else if(hit.lightColor.w == 3)
 		   {
 		   	    gOutput[launchIndex] = lerp(gOutput[launchIndex], float4(payload.colorAndDistance.rgb, 1.f), 1);
 				gLightOutput[launchIndex] = lerp(gLightOutput[launchIndex], float4(payload.lightColor.rgb, 1.f), 1);

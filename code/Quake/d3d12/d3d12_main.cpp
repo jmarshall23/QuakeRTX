@@ -11,6 +11,9 @@
 
 int m_frameIndex = 0;
 
+
+float sky_map_x, sky_map_y, sky_map_w, sky_map_h;
+
 tr_renderer *renderer;
 
 ComPtr<IDXGISwapChain3> m_swapChain;
@@ -650,6 +653,8 @@ void GL_Bind(int texnum)
 
 void GL_FinishDXRLoading(void) 
 {
+	GL_FindMegaTile("sky1", sky_map_x, sky_map_y, sky_map_w, sky_map_h);
+
 	GL_FinishVertexBufferAllocation();
 
 	{
@@ -827,6 +832,20 @@ void GL_Render(float x, float y, float z, float* viewAngles)
 	DirectX::XMVECTOR det;
 	matrices[2] = XMMatrixInverse(&det, matrices[0]);
 	matrices[3] = XMMatrixInverse(&det, matrices[1]);
+
+	static float fakeFrameTime = 0;
+	fakeFrameTime += 1.0f;
+	//matrices[0][0] = fakeFrameTime;
+	float* frameData = (float *)&matrices[0];
+	frameData[0] = fakeFrameTime;
+	frameData[1] = vieworg[0];
+	frameData[2] = vieworg[1];
+	frameData[3] = vieworg[2];
+	frameData[4] = sky_map_x;
+	frameData[5] = sky_map_y;
+	frameData[6] = sky_map_w;
+	frameData[7] = sky_map_h;
+
 
 	// Copy the matrix contents
 	uint8_t* pData;
