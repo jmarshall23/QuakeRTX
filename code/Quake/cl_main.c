@@ -104,6 +104,8 @@ void CL_Disconnect (void)
 	if (key_dest == key_message)
 		Key_EndChat ();	// don't get stuck in chat mode
 
+	GL_ShutdownRaytracingMap();
+
 // stop sounds (especially looping!)
 	S_StopAllSounds (true);
 	BGM_Stop();
