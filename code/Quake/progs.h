@@ -45,6 +45,7 @@ typedef struct edict_s
 	char	clientClassName[256];
 	vec3_t  clientOrigin;
 	int     light;
+	int     light_style;
 
 	int		num_leafs;
 	int		leafnums[MAX_ENT_LEAFS];

@@ -13,6 +13,7 @@ struct glLight_t {
 	vec3_t absmax;
 	entity_t* ent;
 	int leafnums[16];
+	int lightStyle;
 
 	int num_leafs;
 	int distance;
@@ -81,7 +82,7 @@ void GL_FindTouchedLeafs(glLight_t* ent, mnode_t* node)
 		GL_FindTouchedLeafs(ent, node->children[1]);
 }
 
-void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radius) {
+void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radius, int lightStyle) {
 	glLight_t light;
 	light.origin_radius[0] = x;
 	light.origin_radius[1] = y;
@@ -94,6 +95,8 @@ void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radiu
 	light.absmax[0] = x;
 	light.absmax[1] = y;
 	light.absmax[2] = z;
+
+	light.lightStyle = lightStyle;
 
 	light.ent = ent;
 	light.num_leafs = 0;
@@ -163,7 +166,12 @@ void GL_BuildLightList(float x, float y, float z) {
 		sceneLights[numVisLights].origin_radius[0] = ent->origin_radius[0];
 		sceneLights[numVisLights].origin_radius[1] = ent->origin_radius[1];
 		sceneLights[numVisLights].origin_radius[2] = ent->origin_radius[2];
-		sceneLights[numVisLights].origin_radius[3] = ent->origin_radius[3];
+		if(ent->lightStyle) {
+			sceneLights[numVisLights].origin_radius[3] = d_lightstylevalue[ent->lightStyle];
+		}
+		else {
+			sceneLights[numVisLights].origin_radius[3] = ent->origin_radius[3];
+		}
 
 		numVisLights++;
 	}

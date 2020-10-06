@@ -770,6 +770,8 @@ void R_RenderScene (void)
 		r_finishDXRInit = 0;
 	}
 
+	R_AnimateLight();
+
 	//R_SetupScene (); //johnfitz -- this does everything that should be done once per call to RenderScene
 	//
 	//Fog_EnableGFog (); //johnfitz

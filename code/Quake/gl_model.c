@@ -935,6 +935,10 @@ const char* Mod_ParseEdict(const char* data, edict_t* ent, qboolean skipClearHac
 		if (!strcmp(keyname, "light_lev")) {
 			ent->light = atof(com_token);
 		}
+
+		if (!strcmp(keyname, "style")) {
+			ent->light_style = atoi(com_token);
+		}		
 	}
 
 	if (!init)
@@ -1039,14 +1043,14 @@ void Mod_LoadEntities (lump_t *l)
 				ent.light = 200;
 			}
 
-			GL_RegisterWorldLight(&ent, origin[0], origin[1], origin[2], ent.light);
+			GL_RegisterWorldLight(&ent, origin[0], origin[1], origin[2], ent.light, ent.light_style);
 		}
 		else if (ent.light > 0) {
 			vec3_t origin;
 			origin[0] = ent.clientOrigin[0];
 			origin[1] = ent.clientOrigin[1];
 			origin[2] = ent.clientOrigin[2];
-			GL_RegisterWorldLight(&ent, origin[0], origin[1], origin[2], ent.light);
+			GL_RegisterWorldLight(&ent, origin[0], origin[1], origin[2], ent.light, ent.light_style);
 		}
 	}
 
