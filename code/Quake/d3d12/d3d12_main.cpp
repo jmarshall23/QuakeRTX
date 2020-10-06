@@ -356,16 +356,16 @@ void GL_Init(HWND hwnd, HINSTANCE hinstance, int width, int height)
 #if defined(_DEBUG)
 	// Enable the debug layer (requires the Graphics Tools "optional feature").
 	// NOTE: Enabling the debug layer after device creation will invalidate the active device.
-	{
-		ComPtr<ID3D12Debug> debugController;
-		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
-		{
-			debugController->EnableDebugLayer();
-
-			// Enable additional debug layers.
-			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-		}
-	}
+	//{
+	//	ComPtr<ID3D12Debug> debugController;
+	//	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+	//	{
+	//		debugController->EnableDebugLayer();
+	//
+	//		// Enable additional debug layers.
+	//		dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+	//	}
+	//}
 #endif
 
 	ComPtr<IDXGIFactory4> factory;
@@ -486,7 +486,7 @@ void GL_Init(HWND hwnd, HINSTANCE hinstance, int width, int height)
 		settings.swapchain.color_format = tr_format_b8g8r8a8_unorm;
 		settings.swapchain.depth_stencil_format = tr_format_undefined;
 
-		tr_create_renderer("Hexen 2", &settings, &renderer, m_device.Get(), m_swapChain.Get());
+		tr_create_renderer("Darklight", &settings, &renderer, m_device.Get(), m_swapChain.Get());
 	}
 
 	GL_InitRaytracing(width, height);
@@ -523,6 +523,8 @@ GL_BeginRendering
 void GL_BeginRendering(int* x, int* y, int* width, int* height)
 {
 	extern cvar_t gl_clear;
+
+	GL_WaitForPreviousFrame();
 
 	*x = *y = 0;
 	*width = VID_GetCurrentWidth();
@@ -640,7 +642,6 @@ void GL_EndRendering(void)
 	ThrowIfFailed(m_swapChain->Present(0, 0));
 
 	uiTexture->dx_resource->WriteToSubresource(0, NULL, uiTextureBuffer, g_width * 4, 1);
-	GL_WaitForPreviousFrame();
 }
 
 void GL_Bind(int texnum)

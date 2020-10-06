@@ -182,8 +182,8 @@ int main(int argc, char *argv[])
 
 		Host_Frame (time);
 
-		if (time < sys_throttle.value && !cls.timedemo)
-			SDL_Delay(1);
+		//if (time < sys_throttle.value && !cls.timedemo)
+		//	SDL_Delay(1);
 
 		oldtime = newtime;
 	}
