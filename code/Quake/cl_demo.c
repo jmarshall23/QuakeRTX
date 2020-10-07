@@ -394,6 +394,8 @@ void CL_PlayDemo_f (void)
 		return;
 	}
 
+	GL_ShutdownRaytracingMap();
+
 // disconnect from server
 	CL_Disconnect ();
 

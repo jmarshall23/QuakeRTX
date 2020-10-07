@@ -104,7 +104,7 @@ void CL_Disconnect (void)
 	if (key_dest == key_message)
 		Key_EndChat ();	// don't get stuck in chat mode
 
-	GL_ShutdownRaytracingMap();
+	//GL_ShutdownRaytracingMap();
 
 // stop sounds (especially looping!)
 	S_StopAllSounds (true);
@@ -139,6 +139,8 @@ void CL_Disconnect (void)
 
 void CL_Disconnect_f (void)
 {
+	GL_ShutdownRaytracingMap();
+
 	CL_Disconnect ();
 	if (sv.active)
 		Host_ShutdownServer (false);
