@@ -31,8 +31,11 @@ float3 QuakeCoords(float3 xyz) {
 	return float3(xyz.x, -xyz.z, xyz.y);
 }
 
-float attenuation(float r, float f, float d) {
-	return pow(max(0.0, 1.0 - (d / r)), 1.0);
+float attenuation(float r, float f, float d, float3 normal, float3 dir) {
+	float angle = dot (dir, normal);
+	float scalecos = 0.5;
+	angle = (1.0-scalecos) + scalecos*angle;
+	return pow(max(0.0, (r - d) / 128), 1.0) * angle;
 }
 
 // Utility function to get a vector perpendicular to an input vector 
@@ -185,18 +188,19 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
   if(BTriVertex[vertId + 0].st.z != 2 && BTriVertex[vertId + 0].st.z != 3)
   {
 	for(int i = 0; i < 64; i++)
-	{	  
+	{	 
+		float3 normal = BTriVertex[vertId + 0].normal;
 		if(lightInfo[i].origin_radius.w == 0)
 			continue;
 		
-		//bool isBackFacing = dot(normal, WorldRayDirection()) > 0.f;
-		//if (isBackFacing)
-		//	normal = -normal;
+		bool isBackFacing = dot(normal, WorldRayDirection()) > 0.f;
+		if (isBackFacing)
+			normal = -normal;
 		
 		float3 lightPos = (lightInfo[i].origin_radius.xyz);
 		float3 centerLightDir = lightPos - worldOrigin;
 		float lightDistance = length(centerLightDir);
-		float falloff = attenuation(lightInfo[i].origin_radius.w, 1.0, lightDistance);  
+		float falloff = attenuation(lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir));  
 		
 		//bool isShadowed = dot(normal, centerLightDir) < 0;	  
 		//if(!isShadowed)
