@@ -184,18 +184,18 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
   float3 ndotl = 0;
   float3 debug = float3(1, 1, 1);
   
+  float3 normal = BTriVertex[vertId + 0].normal;
+  bool isBackFacing = dot(normal, WorldRayDirection()) > 0.f;
+  if (isBackFacing)
+	normal = -normal;
+  
   // 2 is emissive
   if(BTriVertex[vertId + 0].st.z != 2 && BTriVertex[vertId + 0].st.z != 3)
   {
 	for(int i = 0; i < 64; i++)
-	{	 
-		float3 normal = BTriVertex[vertId + 0].normal;
+	{	 		
 		if(lightInfo[i].origin_radius.w == 0)
 			continue;
-		
-		bool isBackFacing = dot(normal, WorldRayDirection()) > 0.f;
-		if (isBackFacing)
-			normal = -normal;
 		
 		float3 lightPos = (lightInfo[i].origin_radius.xyz);
 		float3 centerLightDir = lightPos - worldOrigin;
@@ -275,8 +275,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
   payload.colorAndDistance = float4(hitColor, 1.0);//float4(hitColor * ndotl * debug, RayTCurrent());
   payload.lightColor = float4(ndotl, BTriVertex[vertId + 0].st.z);
   payload.worldOrigin.xyz = worldOrigin.xyz;
-  
-  float3 normal = BTriVertex[vertId + 0].normal;
+
   payload.worldNormal.x = normal.x;
   payload.worldNormal.y = normal.y;
   payload.worldNormal.z = normal.z;

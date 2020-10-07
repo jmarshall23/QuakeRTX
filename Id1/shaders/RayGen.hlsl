@@ -163,7 +163,7 @@ float3 CalculateClouds() {
 		  HitInfo payload;
 		  payload.colorAndDistance = float4(0, 0, 0, 0);
 
-		  ray.Origin = hit.worldOrigin;
+		  ray.Origin = hit.worldOrigin + (hit.worldNormal * 10);
 		  ray.Direction = reflect(Direction, hit.worldNormal);
 		  ray.TMin = 0;
 		  ray.TMax = 100000;
@@ -221,21 +221,21 @@ float3 CalculateClouds() {
 			  // between the hit/miss shaders and the raygen
 			  payload);
 			  
-		   if(payload.colorAndDistance.w == -1)
+		   //if(payload.colorAndDistance.w == -1)
+		   //{
+			//	//float3 sky = clouds(ray.Direction);
+			//	// gOutput[launchIndex] = lerp(gOutput[launchIndex], float4(sky, 1.f), 0.3);
+			//	//gLightOutput[launchIndex] = lerp(gLightOutput[launchIndex], float4(sky, 1.f), 0.3);
+		   //}			  
+		   //else if(hit.lightColor.w == 3)
+		   //{
+		   //	    gOutput[launchIndex] = lerp(gOutput[launchIndex], float4(payload.colorAndDistance.rgb, 1.f), 1);
+			//	gLightOutput[launchIndex] = lerp(gLightOutput[launchIndex], float4(payload.lightColor.rgb, 1.f), 1);
+		   //}
+		   //else
 		   {
-				//float3 sky = clouds(ray.Direction);
-				// gOutput[launchIndex] = lerp(gOutput[launchIndex], float4(sky, 1.f), 0.3);
-				//gLightOutput[launchIndex] = lerp(gLightOutput[launchIndex], float4(sky, 1.f), 0.3);
-		   }			  
-		   else if(hit.lightColor.w == 3)
-		   {
-		   	    gOutput[launchIndex] = lerp(gOutput[launchIndex], float4(payload.colorAndDistance.rgb, 1.f), 1);
-				gLightOutput[launchIndex] = lerp(gLightOutput[launchIndex], float4(payload.lightColor.rgb, 1.f), 1);
-		   }
-		   else
-		   {
-				gOutput[launchIndex] = lerp(gOutput[launchIndex], float4(payload.colorAndDistance.rgb, 1.f), 0.3);
-				gLightOutput[launchIndex] = lerp(gLightOutput[launchIndex], float4(payload.lightColor.rgb, 1.f), 0.3);
+				gOutput[launchIndex].xyz = lerp(gOutput[launchIndex], float4(payload.colorAndDistance.rgb, 1.f), 0.3);
+				gLightOutput[launchIndex].xyz = lerp(gLightOutput[launchIndex], float4(payload.lightColor.rgb, 1.f), 0.3);
 		   }
 	}
 }
