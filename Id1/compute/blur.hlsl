@@ -39,25 +39,29 @@ groupshared float4  g_shared_input[NUM_THREADS_X];
 //!
 //!
 [numthreads(NUM_THREADS_X, NUM_THREADS_Y, NUM_THREADS_Z)]
-void hblur_main(uint3 gid : SV_GroupID, uint gindex : SV_GroupIndex)
+void hblur_main(uint3 gid : SV_GroupID, uint gindex : SV_GroupIndex, uint3 dispatchThreadId : SV_DispatchThreadID)
 {
   int realOffset = xoffset;
-  if(realOffset > 0)
-  {
-	realOffset = xoffset - HALF_KERNEL_SIZE;
-  }
-  int2 coord = int2(realOffset + gindex, yoffset + gid.y);  
+  int2 coord = int2(realOffset + gindex, yoffset + gid.y);
 
   g_shared_input[gindex] =  BufferIn.Load(int3(coord, 0));  
 
   GroupMemoryBarrierWithGroupSync();
 
   float4 value = 0;
-  for (int i = -HALF_KERNEL_SIZE; i < HALF_KERNEL_SIZE; ++i) {
-    int index = gindex + i;
-    if (index >= 0 && index < NUM_THREADS_X) {
-      value += g_shared_input[index] * k_sample_weights[i + HALF_KERNEL_SIZE];
-    }    
+  
+  if(coord.x < realOffset + NUM_THREADS_X - HALF_KERNEL_SIZE && coord.x > realOffset + HALF_KERNEL_SIZE)
+  {
+	for (int i = -HALF_KERNEL_SIZE; i < HALF_KERNEL_SIZE; ++i) {
+		int index = gindex + i;
+		if (index >= 0 && index < NUM_THREADS_X) {
+		value += g_shared_input[index] * k_sample_weights[i + HALF_KERNEL_SIZE];
+		}    
+	}
+  }
+  else
+  {
+	value = g_shared_input[gindex];
   }
 
   BufferOut[coord] = value;
@@ -67,13 +71,10 @@ void hblur_main(uint3 gid : SV_GroupID, uint gindex : SV_GroupIndex)
 //!
 //!
 [numthreads(NUM_THREADS_X, NUM_THREADS_Y, NUM_THREADS_Z)]
-void vblur_main(uint3 gid : SV_GroupID, uint gindex : SV_GroupIndex)
+void vblur_main(uint3 gid : SV_GroupID, uint gindex : SV_GroupIndex, uint3 dispatchThreadId : SV_DispatchThreadID)
 {
   int realOffset = xoffset;
-  if(realOffset > 0)
-  {
-	realOffset = xoffset - HALF_KERNEL_SIZE;
-  }
+
   int2 coord = int2(realOffset + gid.x, yoffset + gindex);
 
   g_shared_input[gindex] =  BufferIn.Load(int3(coord, 0));
@@ -81,13 +82,19 @@ void vblur_main(uint3 gid : SV_GroupID, uint gindex : SV_GroupIndex)
   GroupMemoryBarrierWithGroupSync();
 
   float4 value = 0;
-  for (int i = -HALF_KERNEL_SIZE; i < HALF_KERNEL_SIZE; ++i) {
-    int index = gindex + i;
-    if (index >= 0 && index < NUM_THREADS_X) {
-      value += g_shared_input[index] * k_sample_weights[i + HALF_KERNEL_SIZE];
-    }    
+  if(coord.y < realOffset + NUM_THREADS_X - HALF_KERNEL_SIZE && coord.y > realOffset + HALF_KERNEL_SIZE)
+  {
+	for (int i = -HALF_KERNEL_SIZE; i < HALF_KERNEL_SIZE; ++i) {
+		int index = gindex + i;
+		if (index >= 0 && index < NUM_THREADS_X) {
+		value += g_shared_input[index] * k_sample_weights[i + HALF_KERNEL_SIZE];
+		}    
+	}
   }
-
+  else
+  {
+	value = g_shared_input[gindex];
+  }
   float4 uiTexture = uiTextureBuffer.Load(int3(coord, 0));
   float4 albeodTexture = AlbedoBufferIn.Load(int3(coord, 0));
   
