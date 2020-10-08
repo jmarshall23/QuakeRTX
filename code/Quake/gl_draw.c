@@ -719,16 +719,19 @@ void GL_SetCanvas (canvastype newcanvas)
 		break;
 	case CANVAS_SBAR:
 		s = CLAMP (1.0, scr_sbarscale.value, (float)glwidth / 320.0);
-		if (cl.gametype == GAME_DEATHMATCH)
-		{
-			//glOrtho (0, glwidth / s, 48, 0, -99999, 99999);
-			GL_SetUICanvas(glx, gly, glwidth, 48*s);
-		}
-		else
-		{
-			//glOrtho (0, 320, 48, 0, -99999, 99999);
-			GL_SetUICanvas(glx + (glwidth - 320*s) / 2, glheight - 48, 320*s, 48*s);
-		}
+// jmarshall
+		//if (cl.gametype == GAME_DEATHMATCH)
+		//{
+		//	//glOrtho (0, glwidth / s, 48, 0, -99999, 99999);
+		//	GL_SetUICanvas(glx, gly, glwidth, 48*s);
+		//}
+		//else
+		//{
+		//	//glOrtho (0, 320, 48, 0, -99999, 99999);
+		//	GL_SetUICanvas(glx + (glwidth - 320*s) / 2, glheight - 48, 320*s, 48*s);
+		//}
+		GL_SetUICanvas(glx + (glwidth - 320 * s) / 2, glheight - 48, 320 * s, 48 * s);
+// jmarshall end
 		break;
 	case CANVAS_WARPIMAGE:
 		//glOrtho (0, 128, 0, 128, -99999, 99999);
