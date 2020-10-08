@@ -428,7 +428,7 @@ void Draw_Init (void)
 Draw_CharacterQuad -- johnfitz -- seperate function to spit out verts
 ================
 */
-void Draw_CharacterQuad (int x, int y, char num)
+void Draw_CharacterQuad (int x, int y, unsigned char num)
 {
 	int				row, col;
 	float			frow, fcol, size;
