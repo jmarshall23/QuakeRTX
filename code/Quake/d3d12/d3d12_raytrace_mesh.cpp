@@ -59,7 +59,7 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 
 		if (strstr(name, "04water")) {
 			name = "water0"; // stupid hack, fix the damn atlas!
-			materialInfo = 3;
+			materialInfo = 1;
 		}
 
 		if (strstr(name, "wizmet")) {
@@ -75,6 +75,10 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 		}
 
 		if (strstr(name, "city2_7")) {
+			materialInfo = 1;
+		}
+
+		if (strstr(name, "woodflr1_4")) {
 			materialInfo = 1;
 		}
 
@@ -295,6 +299,7 @@ void *GL_LoadDXRAliasMesh(const char* name, int numVertexes, trivertx_t* vertexe
 		}
 	}
 
+
 	// Calculate the normals
 	{
 		for (int i = 0; i < mesh->numSceneVertexes; i += 3)
@@ -320,6 +325,247 @@ void *GL_LoadDXRAliasMesh(const char* name, int numVertexes, trivertx_t* vertexe
 	return mesh;
 }
 
+#if 0
+/*
+** LerpMeshVertexes
+*/
+static void LerpMeshVertexes(md3Surface_t* surf, float backlerp, int frame, int oldframe, dxrVertex_t* vertexes, float x, float y, float w, float h)
+{
+	short* oldXyz, * newXyz, * oldNormals, * newNormals;
+	//float* outXyz, * outNormal;
+	float	oldXyzScale, newXyzScale;
+	float	oldNormalScale, newNormalScale;
+	int		vertNum;
+	unsigned lat, lng;
+	int		numVerts;
+	float* texCoords;
+
+	//outXyz = tess.xyz[tess.numVertexes];
+	//outNormal = tess.normal[tess.numVertexes];
+
+	newXyz = (short*)((byte*)surf + surf->ofsXyzNormals)
+		+ (frame * surf->numVerts * 4);
+	newNormals = newXyz + 3;
+
+	newXyzScale = MD3_XYZ_SCALE * (1.0 - backlerp);
+	newNormalScale = 1.0 - backlerp;
+
+	numVerts = surf->numVerts;
+	texCoords = (float*)((byte*)surf + surf->ofsSt);
+	//
+	// just copy the vertexes
+	//
+	for (vertNum = 0; vertNum < numVerts; vertNum++,
+		newXyz += 4, newNormals += 4, vertexes++, texCoords += 2)
+	{
+
+		vertexes->xyz[0] = newXyz[0] * newXyzScale;
+		vertexes->xyz[1] = newXyz[1] * newXyzScale;
+		vertexes->xyz[2] = newXyz[2] * newXyzScale;
+
+		lat = (newNormals[0] >> 8) & 0xff;
+		lng = (newNormals[0] & 0xff);
+		lat *= (FUNCTABLE_SIZE / 256);
+		lng *= (FUNCTABLE_SIZE / 256);
+
+		// decode X as cos( lat ) * sin( long )
+		// decode Y as sin( lat ) * sin( long )
+		// decode Z as cos( long )
+
+		vertexes->normal[0] = tr.sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * tr.sinTable[lng];
+		vertexes->normal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+		vertexes->normal[2] = tr.sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+
+		vertexes->st[0] = texCoords[0];
+		vertexes->st[1] = texCoords[1];
+		vertexes->st[2] = 0;
+
+		vertexes->vtinfo[0] = x;
+		vertexes->vtinfo[1] = y;
+		vertexes->vtinfo[2] = w;
+		vertexes->vtinfo[3] = h;
+	}
+	/*
+		if (backlerp == 0) {
+	#if idppc_altivec
+			vector signed short newNormalsVec0;
+			vector signed short newNormalsVec1;
+			vector signed int newNormalsIntVec;
+			vector float newNormalsFloatVec;
+			vector float newXyzScaleVec;
+			vector unsigned char newNormalsLoadPermute;
+			vector unsigned char newNormalsStorePermute;
+			vector float zero;
+
+			newNormalsStorePermute = vec_lvsl(0, (float*)&newXyzScaleVec);
+			newXyzScaleVec = *(vector float*) & newXyzScale;
+			newXyzScaleVec = vec_perm(newXyzScaleVec, newXyzScaleVec, newNormalsStorePermute);
+			newXyzScaleVec = vec_splat(newXyzScaleVec, 0);
+			newNormalsLoadPermute = vec_lvsl(0, newXyz);
+			newNormalsStorePermute = vec_lvsr(0, outXyz);
+			zero = (vector float)vec_splat_s8(0);
+			//
+			// just copy the vertexes
+			//
+			for (vertNum = 0; vertNum < numVerts; vertNum++,
+				newXyz += 4, newNormals += 4,
+				outXyz += 4, outNormal += 4)
+			{
+				newNormalsLoadPermute = vec_lvsl(0, newXyz);
+				newNormalsStorePermute = vec_lvsr(0, outXyz);
+				newNormalsVec0 = vec_ld(0, newXyz);
+				newNormalsVec1 = vec_ld(16, newXyz);
+				newNormalsVec0 = vec_perm(newNormalsVec0, newNormalsVec1, newNormalsLoadPermute);
+				newNormalsIntVec = vec_unpackh(newNormalsVec0);
+				newNormalsFloatVec = vec_ctf(newNormalsIntVec, 0);
+				newNormalsFloatVec = vec_madd(newNormalsFloatVec, newXyzScaleVec, zero);
+				newNormalsFloatVec = vec_perm(newNormalsFloatVec, newNormalsFloatVec, newNormalsStorePermute);
+				//outXyz[0] = newXyz[0] * newXyzScale;
+				//outXyz[1] = newXyz[1] * newXyzScale;
+				//outXyz[2] = newXyz[2] * newXyzScale;
+
+				lat = (newNormals[0] >> 8) & 0xff;
+				lng = (newNormals[0] & 0xff);
+				lat *= (FUNCTABLE_SIZE / 256);
+				lng *= (FUNCTABLE_SIZE / 256);
+
+				// decode X as cos( lat ) * sin( long )
+				// decode Y as sin( lat ) * sin( long )
+				// decode Z as cos( long )
+
+				outNormal[0] = tr.sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * tr.sinTable[lng];
+				outNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+				outNormal[2] = tr.sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+
+				vec_ste(newNormalsFloatVec, 0, outXyz);
+				vec_ste(newNormalsFloatVec, 4, outXyz);
+				vec_ste(newNormalsFloatVec, 8, outXyz);
+			}
+
+	#else
+			//
+			// just copy the vertexes
+			//
+			for (vertNum = 0; vertNum < numVerts; vertNum++,
+				newXyz += 4, newNormals += 4, vertexes++)
+			{
+
+				vertexes->xyz[0] = newXyz[0] * newXyzScale;
+				vertexes->xyz[1] = newXyz[1] * newXyzScale;
+				vertexes->xyz[2] = newXyz[2] * newXyzScale;
+
+				lat = (newNormals[0] >> 8) & 0xff;
+				lng = (newNormals[0] & 0xff);
+				lat *= (FUNCTABLE_SIZE / 256);
+				lng *= (FUNCTABLE_SIZE / 256);
+
+				// decode X as cos( lat ) * sin( long )
+				// decode Y as sin( lat ) * sin( long )
+				// decode Z as cos( long )
+
+				outNormal[0] = tr.sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * tr.sinTable[lng];
+				outNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+				outNormal[2] = tr.sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+			}
+	#endif
+		}
+		else {
+			//
+			// interpolate and copy the vertex and normal
+			//
+			oldXyz = (short*)((byte*)surf + surf->ofsXyzNormals)
+				+ (oldframe * surf->numVerts * 4);
+			oldNormals = oldXyz + 3;
+
+			oldXyzScale = MD3_XYZ_SCALE * backlerp;
+			oldNormalScale = backlerp;
+
+			for (vertNum = 0; vertNum < numVerts; vertNum++,
+				oldXyz += 4, newXyz += 4, oldNormals += 4, newNormals += 4,
+				outXyz += 4, outNormal += 4)
+			{
+				vec3_t uncompressedOldNormal, uncompressedNewNormal;
+
+				// interpolate the xyz
+				outXyz[0] = oldXyz[0] * oldXyzScale + newXyz[0] * newXyzScale;
+				outXyz[1] = oldXyz[1] * oldXyzScale + newXyz[1] * newXyzScale;
+				outXyz[2] = oldXyz[2] * oldXyzScale + newXyz[2] * newXyzScale;
+
+				// FIXME: interpolate lat/long instead?
+				lat = (newNormals[0] >> 8) & 0xff;
+				lng = (newNormals[0] & 0xff);
+				lat *= 4;
+				lng *= 4;
+				uncompressedNewNormal[0] = tr.sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * tr.sinTable[lng];
+				uncompressedNewNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+				uncompressedNewNormal[2] = tr.sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+
+				lat = (oldNormals[0] >> 8) & 0xff;
+				lng = (oldNormals[0] & 0xff);
+				lat *= 4;
+				lng *= 4;
+
+				uncompressedOldNormal[0] = tr.sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * tr.sinTable[lng];
+				uncompressedOldNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+				uncompressedOldNormal[2] = tr.sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+
+				outNormal[0] = uncompressedOldNormal[0] * oldNormalScale + uncompressedNewNormal[0] * newNormalScale;
+				outNormal[1] = uncompressedOldNormal[1] * oldNormalScale + uncompressedNewNormal[1] * newNormalScale;
+				outNormal[2] = uncompressedOldNormal[2] * oldNormalScale + uncompressedNewNormal[2] * newNormalScale;
+
+				//			VectorNormalize (outNormal);
+			}
+			VectorArrayNormalize((vec4_t*)tess.normal[tess.numVertexes], numVerts);
+		}
+	*/
+}
+
+void* GL_LoadMD3RaytracedMesh(md3Header_t* mod, int frame) {
+	dxrMesh_t* mesh = new dxrMesh_t();
+
+	//mesh->meshId = dxrMeshList.size();
+	mesh->startSceneVertex = sceneVertexes.size();
+	mesh->numSceneVertexes = 0;
+
+	float x, y, w, h;
+	char textureName[512];
+
+	md3Surface_t* surf = (md3Surface_t*)((byte*)mod + mod->ofsSurfaces);
+
+	for (int i = 0; i < mod->numSurfaces; i++) {
+		md3Shader_t* shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
+
+		COM_StripExtension(COM_SkipPath((char*)shader->name), textureName);
+		GL_FindMegaTile(textureName, &x, &y, &w, &h);
+
+		int startVert = mesh->meshVertexes.size();
+		dxrVertex_t* meshVertexes = new dxrVertex_t[surf->numVerts];
+
+		LerpMeshVertexes(surf, 0.0f, frame, frame, meshVertexes, x, y, w, h);
+
+		int indexes = surf->numTriangles * 3;
+		int* triangles = (int*)((byte*)surf + surf->ofsTriangles);
+
+		for (int j = 0; j < indexes; j++) {
+			int tri = triangles[j];
+			dxrVertex_t v = meshVertexes[tri];
+
+			mesh->meshTriVertexes.push_back(v);
+			sceneVertexes.push_back(v);
+			mesh->numSceneVertexes++;
+		}
+
+		delete[] meshVertexes;
+
+		// find the next surface
+		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
+	}
+
+	dxrMeshList.push_back(mesh);
+
+	return mesh;
+}
+#endif
 void GL_FinishVertexBufferAllocation(void) {
 //	ThrowIfFailed(m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()));
 

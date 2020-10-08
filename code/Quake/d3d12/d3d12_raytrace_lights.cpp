@@ -9,9 +9,10 @@
 
 struct glLight_t {
 	vec4_t origin_radius;
+	vec4_t light_color;
 	vec3_t absmin;
 	vec3_t absmax;
-	entity_t* ent;
+	//entity_t* ent;
 	int leafnums[16];
 	int lightStyle;
 
@@ -21,6 +22,7 @@ struct glLight_t {
 
 struct sceneLightInfo_t {
 	vec4_t origin_radius;
+	vec4_t light_color;
 };
 
 glLight_t worldLights[MAX_WORLD_LIGHTS];
@@ -37,6 +39,12 @@ GL_ClearLights
 void GL_ClearLights(void) {
 	memset(&worldLights[0], 0, sizeof(worldLights));
 	numWorldLights = 0;
+
+	if (sceneLightInfoBuffer != NULL)
+	{
+		tr_destroy_buffer(renderer, sceneLightInfoBuffer);
+		sceneLightInfoBuffer = NULL;
+	}
 }
 
 /*
@@ -82,12 +90,17 @@ void GL_FindTouchedLeafs(glLight_t* ent, mnode_t* node)
 		GL_FindTouchedLeafs(ent, node->children[1]);
 }
 
-void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radius, int lightStyle) {
+void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radius, int lightStyle, float r, float g, float b) {
 	glLight_t light;
 	light.origin_radius[0] = x;
 	light.origin_radius[1] = y;
 	light.origin_radius[2] = z;
 	light.origin_radius[3] = radius;
+
+	light.light_color[0] = r;
+	light.light_color[1] = g;
+	light.light_color[2] = b;
+
 	light.absmin[0] = x;
 	light.absmin[1] = y;
 	light.absmin[2] = z;
@@ -98,7 +111,7 @@ void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radiu
 
 	light.lightStyle = lightStyle;
 
-	light.ent = ent;
+	//light.ent = ent;
 	light.num_leafs = 0;
 	GL_FindTouchedLeafs(&light, loadmodel->nodes);
 
@@ -172,6 +185,10 @@ void GL_BuildLightList(float x, float y, float z) {
 		else {
 			sceneLights[numVisLights].origin_radius[3] = ent->origin_radius[3];
 		}
+
+		sceneLights[numVisLights].light_color[0] = ent->light_color[0];
+		sceneLights[numVisLights].light_color[1] = ent->light_color[1];
+		sceneLights[numVisLights].light_color[2] = ent->light_color[2];
 
 		numVisLights++;
 	}

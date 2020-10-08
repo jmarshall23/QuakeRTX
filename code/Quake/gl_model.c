@@ -985,6 +985,61 @@ void Mod_LoadEntities (lump_t *l)
 		}
 	}
 
+	char	rtfilename[MAX_QPATH];
+	q_strlcpy(rtfilename, loadmodel->name, sizeof(rtfilename));
+	COM_StripExtension(rtfilename, rtfilename, sizeof(rtfilename));
+	q_strlcat(rtfilename, ".rtlights", sizeof(rtfilename));
+	char* buf = COM_LoadHunkFile(rtfilename, &path_id);
+	qboolean rtLightsFile = false;
+	if (buf) {
+		rtLightsFile = true;
+
+		char* rtlight_buffer = buf;
+
+		while (rtlight_buffer != NULL)
+		{
+
+			if (rtlight_buffer[0] == '!')
+				rtlight_buffer++;
+
+			rtlight_buffer = COM_Parse(rtlight_buffer);
+			if (rtlight_buffer == NULL)
+				break;
+
+			float x = atof(com_token);
+
+			rtlight_buffer = COM_Parse(rtlight_buffer);
+			float y = atof(com_token);
+
+			rtlight_buffer = COM_Parse(rtlight_buffer);
+			float z = atof(com_token);
+
+			rtlight_buffer = COM_Parse(rtlight_buffer);
+			float intensity = atof(com_token);
+
+			rtlight_buffer = COM_Parse(rtlight_buffer);
+			float r = atof(com_token);
+
+			rtlight_buffer = COM_Parse(rtlight_buffer);
+			float g = atof(com_token);
+
+			rtlight_buffer = COM_Parse(rtlight_buffer);
+			float b = atof(com_token);
+
+			rtlight_buffer = COM_Parse(rtlight_buffer);
+			int lightstyles = atoi(com_token);
+
+			// Cubemap.
+			rtlight_buffer = COM_Parse(rtlight_buffer);
+			for (int d = 0; d < 8; d++) {
+				rtlight_buffer = COM_Parse(rtlight_buffer);
+			}
+			rtlight_buffer = COM_Parse(rtlight_buffer);
+
+			GL_RegisterWorldLight(NULL, x, y, z, intensity, lightstyles, r, g, b);
+		}
+	}
+
 	const char* data = (dvertex_t*)(mod_base + l->fileofs);
 
 	// parse ents
@@ -1003,54 +1058,57 @@ void Mod_LoadEntities (lump_t *l)
 
 		data = Mod_ParseEdict(data, &ent, true);
 
-		const char* entityName = ent.clientClassName;
-		if (strstr(entityName, "light")) {
-			vec3_t origin;
-			origin[0] = ent.clientOrigin[0];
-			origin[1] = ent.clientOrigin[1];
-			origin[2] = ent.clientOrigin[2];
+		if (!rtLightsFile)
+		{
+			const char* entityName = ent.clientClassName;
+			if (strstr(entityName, "light")) {
+				vec3_t origin;
+				origin[0] = ent.clientOrigin[0];
+				origin[1] = ent.clientOrigin[1];
+				origin[2] = ent.clientOrigin[2];
 
-			if (strstr(entityName, "torch") || strstr(entityName, "candle")) {
-				//vec3_t dirs[4] = { { 60, 0, 0 },
-				//				   { -60, 0, 0 },
-				//				   { 0, 60, 0},
-				//				   { 0, -60, 0} };
-				//
-				//for (int f = 0; f < 4; f++)
-				//{
-				//	trace_t trace;
-				//	vec3_t end;
-				//	vec3_t mins = { -5, -5, -5 };
-				//	vec3_t maxs = { -5, -5, -5 };
-				//
-				//	end[0] = origin[0] + dirs[f][0];
-				//	end[1] = origin[1] + dirs[f][1];
-				//	end[2] = origin[2] + dirs[f][2];
-				//
-				//	trace = SV_Move(origin, mins, maxs, end, false, &ent);
-				//
-				//	if (trace.fraction < 0.5) {
-				//		origin[0] += trace.plane.normal[0] * 20;
-				//		origin[1] += trace.plane.normal[1] * 20;
-				//		//origin[2] += 20.0f;
-				//		break;
-				//	}
-				//}
-				origin[2] += 20.0f;
+				if (strstr(entityName, "torch") || strstr(entityName, "candle")) {
+					//vec3_t dirs[4] = { { 60, 0, 0 },
+					//				   { -60, 0, 0 },
+					//				   { 0, 60, 0},
+					//				   { 0, -60, 0} };
+					//
+					//for (int f = 0; f < 4; f++)
+					//{
+					//	trace_t trace;
+					//	vec3_t end;
+					//	vec3_t mins = { -5, -5, -5 };
+					//	vec3_t maxs = { -5, -5, -5 };
+					//
+					//	end[0] = origin[0] + dirs[f][0];
+					//	end[1] = origin[1] + dirs[f][1];
+					//	end[2] = origin[2] + dirs[f][2];
+					//
+					//	trace = SV_Move(origin, mins, maxs, end, false, &ent);
+					//
+					//	if (trace.fraction < 0.5) {
+					//		origin[0] += trace.plane.normal[0] * 20;
+					//		origin[1] += trace.plane.normal[1] * 20;
+					//		//origin[2] += 20.0f;
+					//		break;
+					//	}
+					//}
+					origin[2] += 20.0f;
+				}
+
+				if (ent.light == 0) {
+					ent.light = 200;
+				}
+
+				GL_RegisterWorldLight(&ent, origin[0], origin[1], origin[2], ent.light, ent.light_style, 1.0f, 1.0f, 1.0f);
 			}
-
-			if (ent.light == 0) {
-				ent.light = 200;
+			else if (ent.light > 0) {
+				vec3_t origin;
+				origin[0] = ent.clientOrigin[0];
+				origin[1] = ent.clientOrigin[1];
+				origin[2] = ent.clientOrigin[2];
+				GL_RegisterWorldLight(&ent, origin[0], origin[1], origin[2], ent.light, ent.light_style, 1.0f, 1.0f, 1.0f);
 			}
-
-			GL_RegisterWorldLight(&ent, origin[0], origin[1], origin[2], ent.light, ent.light_style);
-		}
-		else if (ent.light > 0) {
-			vec3_t origin;
-			origin[0] = ent.clientOrigin[0];
-			origin[1] = ent.clientOrigin[1];
-			origin[2] = ent.clientOrigin[2];
-			GL_RegisterWorldLight(&ent, origin[0], origin[1], origin[2], ent.light, ent.light_style);
 		}
 	}
 

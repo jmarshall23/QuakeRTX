@@ -18,6 +18,7 @@ struct SInstanceProperties
 
 struct sceneLightInfo_t {
 	float4 origin_radius;
+	float4 light_color;
 };
 
 
@@ -33,9 +34,11 @@ float3 QuakeCoords(float3 xyz) {
 
 float attenuation(float r, float f, float d, float3 normal, float3 dir) {
 	float angle = dot (dir, normal);
-	float scalecos = 0.5;
-	angle = (1.0-scalecos) + scalecos*angle;
-	return pow(max(0.0, (r - d) / 128), 1.0) * angle;
+	//float scalecos = 0.5;
+	//angle = (1.0-scalecos) + scalecos*angle;
+	//return pow(max(0.0, (r - d) / 128), 1.0) * angle;
+	
+	return (r / pow(d, 1.3)) * angle;
 }
 
 // Utility function to get a vector perpendicular to an input vector 
@@ -181,7 +184,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
   // Find the world - space hit position
   float3 worldOrigin = WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
   
-  float3 ndotl = 0;
+  float3 ndotl = float3(0.3, 0.3, 0.3);
   float3 debug = float3(1, 1, 1);
   
   float3 normal = BTriVertex[vertId + 0].normal;
@@ -200,7 +203,9 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 		float3 lightPos = (lightInfo[i].origin_radius.xyz);
 		float3 centerLightDir = lightPos - worldOrigin;
 		float lightDistance = length(centerLightDir);
-		float falloff = attenuation(lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir));  
+		float falloff = attenuation(lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir)) - 0.04;  
+		
+		falloff = clamp(falloff, 0.0, 1.0);
 		
 		//bool isShadowed = dot(normal, centerLightDir) < 0;	  
 		//if(!isShadowed)
@@ -208,7 +213,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 		{
 				if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance))
 				{
-					ndotl += float3(1, 1, 1) * falloff; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
+					ndotl += lightInfo[i].light_color.xyz * falloff; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
 				}
 		}	  
 		//  debug = normal;
@@ -221,7 +226,6 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
   
   for(int i = 4; i < 9; i++)
   {
-	  float3 normal = BTriVertex[vertId + 0].normal;
 	  uint2 pixIdx = DispatchRaysIndex().xy;
 	  uint randSeed = initRand( pixIdx.x + pixIdx.y * 1920, 0 );
 	  int r = length(float3(worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y)) * i;
@@ -270,7 +274,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
   }
 
   //hitColor = float3(InstanceID(), 0, 0);
-  ndotl = max(0.25, ndotl);
+ // ndotl = max(0.2, ndotl) ;
 
   payload.colorAndDistance = float4(hitColor, 1.0);//float4(hitColor * ndotl * debug, RayTCurrent());
   payload.lightColor = float4(ndotl, BTriVertex[vertId + 0].st.z);
