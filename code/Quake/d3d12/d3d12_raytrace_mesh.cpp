@@ -62,6 +62,10 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 			materialInfo = 1;
 		}
 
+		if (strstr(name, "wall9_8")) {
+			materialInfo = 1;
+		}
+
 		if (strstr(name, "wizmet")) {
 			materialInfo = 1;
 		}
@@ -232,7 +236,7 @@ void GL_AliasVertexToDxrVertex(trivertx_t inVert, stvert_t stvert, dxrVertex_t &
 	vertex.xyz[2] = inVert.v[2];
 	vertex.st[0] = stvert.s;
 	vertex.st[1] = stvert.t;
-	vertex.st[2] = 0;
+	vertex.st[2] = -1;
 
 	if(stvert.onseam && !facesFront) {
 		vertex.st[0] += w * 0.5f; // backface.

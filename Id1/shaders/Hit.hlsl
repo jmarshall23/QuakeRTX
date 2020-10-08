@@ -224,15 +224,18 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 	ndotl = float3(1, 1, 1);
   }
   
-  for(int i = 4; i < 9; i++)
+  if(BTriVertex[vertId + 0].st.z >= 0)
   {
-	  uint2 pixIdx = DispatchRaysIndex().xy;
-	  uint randSeed = initRand( pixIdx.x + pixIdx.y * 1920, 0 );
-	  int r = length(float3(worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y)) * i;
-	  float3 worldDir = getCosHemisphereSample(r, normal);
-	  if(IsLightShadowed(worldOrigin, worldDir, 5 * ( i * 0.1) )) {
-		  ndotl *= 0.1;
-	  }
+	for(int i = 4; i < 9; i++)
+	{
+		uint2 pixIdx = DispatchRaysIndex().xy;
+		uint randSeed = initRand( pixIdx.x + pixIdx.y * 1920, 0 );
+		int r = length(float3(worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y)) * i;
+		float3 worldDir = getCosHemisphereSample(r, normal);
+		if(IsLightShadowed(worldOrigin, worldDir, 5 * ( i * 0.1) )) {
+			ndotl *= 0.1;
+		}
+	}
   }
   
   if(BTriVertex[vertId + 0].vtinfo.x != -1)
