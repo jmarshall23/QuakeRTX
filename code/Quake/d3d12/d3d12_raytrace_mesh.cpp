@@ -295,6 +295,26 @@ void *GL_LoadDXRAliasMesh(const char* name, int numVertexes, trivertx_t* vertexe
 		}
 	}
 
+	// Calculate the normals
+	{
+		for (int i = 0; i < mesh->numSceneVertexes; i += 3)
+		{
+			float* v0 = &sceneVertexes[mesh->startSceneVertex + i + 0].xyz[0];
+			float* v1 = &sceneVertexes[mesh->startSceneVertex + i + 1].xyz[0];
+			float* v2 = &sceneVertexes[mesh->startSceneVertex + i + 2].xyz[0];
+
+			vec3_t e1, e2, normal;
+			VectorSubtract(v1, v0, e1);
+			VectorSubtract(v2, v0, e2);
+			CrossProduct(e1, e2, normal);
+			VectorNormalize(normal);
+
+			memcpy(sceneVertexes[mesh->startSceneVertex + i + 0].normal, normal, sizeof(float) * 3);
+			memcpy(sceneVertexes[mesh->startSceneVertex + i + 1].normal, normal, sizeof(float) * 3);
+			memcpy(sceneVertexes[mesh->startSceneVertex + i + 2].normal, normal, sizeof(float) * 3);
+		}
+	}
+
 	dxrMeshList.push_back(mesh);
 
 	return mesh;
