@@ -2642,21 +2642,22 @@ void *Mod_LoadAllSkins (int numskins, daliasskintype_t *pskintype)
 			//johnfitz -- rewritten
 			q_snprintf (name, sizeof(name), "%s:frame%i", loadmodel->name, i);
 			offset = (src_offset_t)(pskintype+1) - (src_offset_t)mod_base;
-			if (Mod_CheckFullbrights ((byte *)(pskintype+1), size))
-			{
-				pheader->gltextures[i][0] = TexMgr_LoadImage (loadmodel, name, pheader->skinwidth, pheader->skinheight,
-					SRC_INDEXED, (byte *)(pskintype+1), loadmodel->name, offset, texflags | TEXPREF_NOBRIGHT);
-				q_snprintf (fbr_mask_name, sizeof(fbr_mask_name), "%s:frame%i_glow", loadmodel->name, i);
-				pheader->fbtextures[i][0] = TexMgr_LoadImage (loadmodel, fbr_mask_name, pheader->skinwidth, pheader->skinheight,
-					SRC_INDEXED, (byte *)(pskintype+1), loadmodel->name, offset, texflags | TEXPREF_FULLBRIGHT);
-			}
-			else
-			{
-				pheader->gltextures[i][0] = TexMgr_LoadImage (loadmodel, name, pheader->skinwidth, pheader->skinheight,
-					SRC_INDEXED, (byte *)(pskintype+1), loadmodel->name, offset, texflags);
-				pheader->fbtextures[i][0] = NULL;
-			}
-
+// jmarshall - not needed
+			//if (Mod_CheckFullbrights ((byte *)(pskintype+1), size))
+			//{
+			//	pheader->gltextures[i][0] = TexMgr_LoadImage (loadmodel, name, pheader->skinwidth, pheader->skinheight,
+			//		SRC_INDEXED, (byte *)(pskintype+1), loadmodel->name, offset, texflags | TEXPREF_NOBRIGHT);
+			//	q_snprintf (fbr_mask_name, sizeof(fbr_mask_name), "%s:frame%i_glow", loadmodel->name, i);
+			//	pheader->fbtextures[i][0] = TexMgr_LoadImage (loadmodel, fbr_mask_name, pheader->skinwidth, pheader->skinheight,
+			//		SRC_INDEXED, (byte *)(pskintype+1), loadmodel->name, offset, texflags | TEXPREF_FULLBRIGHT);
+			//}
+			//else
+			//{
+			//	pheader->gltextures[i][0] = TexMgr_LoadImage (loadmodel, name, pheader->skinwidth, pheader->skinheight,
+			//		SRC_INDEXED, (byte *)(pskintype+1), loadmodel->name, offset, texflags);
+			//	pheader->fbtextures[i][0] = NULL;
+			//}
+// jmarshall end
 			pheader->gltextures[i][3] = pheader->gltextures[i][2] = pheader->gltextures[i][1] = pheader->gltextures[i][0];
 			pheader->fbtextures[i][3] = pheader->fbtextures[i][2] = pheader->fbtextures[i][1] = pheader->fbtextures[i][0];
 			//johnfitz

@@ -132,3 +132,4 @@ extern "C" {
 
 void GL_BuildLightList(float x, float y, float z);
 void GL_ClearLights(void);
+void GL_WaitForPreviousFrame(void);

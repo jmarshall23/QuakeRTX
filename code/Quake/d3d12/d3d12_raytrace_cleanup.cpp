@@ -18,6 +18,9 @@ GL_ShutdownRaytracingMap
 void GL_ShutdownRaytracingMap(void) {
 	r_finishDXRInit = 1;
 
+	// Don't clean up any data until the previous frame is done rendering!
+	GL_WaitForPreviousFrame();
+
 	// Remove all the models.
 	Mod_ResetAll();
 
