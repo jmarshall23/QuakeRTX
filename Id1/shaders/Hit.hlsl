@@ -115,7 +115,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
      	// Instance inclusion mask, which can be used to mask out some geometry to
      	// this ray by and-ing the mask with a geometry mask. The 0xFF flag then
      	// indicates no geometry will be masked
-     	0xFF,
+     	0x80,
      	// Depending on the type of ray, a given object can have several hit
      	// groups attached (ie. what to do when hitting to compute regular
      	// shading, and what to do when hitting to compute shadows). Those hit

@@ -203,12 +203,19 @@ void R_StoreEfrags (efrag_t **ppefrag)
 {
 	entity_t	*pent;
 	efrag_t		*pefrag;
-
+// jmarshall 
 	while ((pefrag = *ppefrag) != NULL)
 	{
 		pent = pefrag->entity;
 
-		if ((pent->visframe != r_framecount) && (cl_numvisedicts < MAX_VISEDICTS))
+		if (strstr(pefrag->entity->model->name, "flame")) {
+			pent->skipShadows = true;
+		}
+		else {
+			pent->skipShadows = false;
+		}
+
+		if ((cl_numvisedicts < MAX_VISEDICTS))
 		{
 			cl_visedicts[cl_numvisedicts++] = pent;
 			pent->visframe = r_framecount;
@@ -216,5 +223,6 @@ void R_StoreEfrags (efrag_t **ppefrag)
 
 		ppefrag = &pefrag->leafnext;
 	}
+// jmarshall end
 }
 

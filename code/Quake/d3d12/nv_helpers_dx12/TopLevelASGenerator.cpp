@@ -182,7 +182,7 @@ void TopLevelASGenerator::Generate(
     // Instance ID visible in the shader in InstanceID()
     instanceDescs[i].InstanceID = m_instances[i].instanceID;
     // Index of the hit group invoked upon intersection
-    instanceDescs[i].InstanceContributionToHitGroupIndex = m_instances[i].hitGroupIndex;
+    instanceDescs[i].InstanceContributionToHitGroupIndex = 0;
     // Instance flags, including backface culling, winding, etc - TODO: should
     // be accessible from outside
     instanceDescs[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
@@ -193,7 +193,7 @@ void TopLevelASGenerator::Generate(
     instanceDescs[i].AccelerationStructure = m_instances[i].bottomLevelAS->GetGPUVirtualAddress();
     // Visibility mask, always visible here - TODO: should be accessible from
     // outside
-    instanceDescs[i].InstanceMask = 0xFF;
+    instanceDescs[i].InstanceMask = m_instances[i].hitGroupIndex;
   }
 
   descriptorsBuffer->Unmap(0, nullptr);

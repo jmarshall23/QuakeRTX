@@ -123,7 +123,7 @@ void GL_CreateTopLevelAccelerationStructs(bool forceUpdate) {
 		{
 			// World matrix is always a identity.
 			static DirectX::XMMATRIX worldmatrix = DirectX::XMMatrixIdentity();
-			m_topLevelASGenerator.AddInstance(dxrMeshList[0]->buffers.pResult.Get(), worldmatrix, 0, 0);
+			m_topLevelASGenerator.AddInstance(dxrMeshList[0]->buffers.pResult.Get(), worldmatrix, 0, 0xFF);
 		}
 
 		for (int i = 0; i < cl_numvisedicts; i++)
@@ -139,8 +139,15 @@ void GL_CreateTopLevelAccelerationStructs(bool forceUpdate) {
 			switch (currententity->model->type)
 			{
 			case mod_brush:
-			case mod_alias:				
-				m_topLevelASGenerator.AddInstance(mesh->buffers.pResult.Get(), (DirectX::XMMATRIX&)currententity->dxrTransform, i + 1, 0);
+			case mod_alias:		
+				if (!currententity->skipShadows)
+				{
+					m_topLevelASGenerator.AddInstance(mesh->buffers.pResult.Get(), (DirectX::XMMATRIX&)currententity->dxrTransform, i + 1, 0xFF);
+				}
+				else
+				{
+					m_topLevelASGenerator.AddInstance(mesh->buffers.pResult.Get(), (DirectX::XMMATRIX&)currententity->dxrTransform, i + 1, 0x20);
+				}
 				break;
 			}
 		}
@@ -154,7 +161,7 @@ void GL_CreateTopLevelAccelerationStructs(bool forceUpdate) {
 				if (mesh)
 				{
 					meshInstanceData[cl_numvisedicts + 1].startVertex = mesh->startSceneVertex;
-					m_topLevelASGenerator.AddInstance(mesh->buffers.pResult.Get(), (DirectX::XMMATRIX&)currententity->dxrTransform, cl_numvisedicts + 1, 0);
+					m_topLevelASGenerator.AddInstance(mesh->buffers.pResult.Get(), (DirectX::XMMATRIX&)currententity->dxrTransform, cl_numvisedicts + 1, 0xFF);
 				}
 			}
 		}

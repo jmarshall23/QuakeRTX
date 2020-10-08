@@ -770,6 +770,9 @@ void R_RenderScene (void)
 		r_finishDXRInit = 0;
 	}
 
+	// This is needed to show efrags(static objects).
+	R_MarkSurfaces();
+
 	R_AnimateLight();
 
 	//R_SetupScene (); //johnfitz -- this does everything that should be done once per call to RenderScene

@@ -72,6 +72,8 @@ typedef struct entity_s
 	int						dlightframe;	// dynamic lighting
 	int						dlightbits;
 
+	qboolean				skipShadows;
+
 // FIXME: could turn these into a union
 	int						trivial_accept;
 	struct mnode_s			*topnode;		// for bmodels, first world node
