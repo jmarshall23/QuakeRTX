@@ -1,0 +1,224 @@
+Overall the code is painful to read:
+
+- Very few comments
+- Some comments are outdated.
+- The internal functionment of some function is determined by global variables. This makes is very difficult to keep track of everything.
+- Some function are named in a way that the reader is sent totally in a wrong direction (i.e: GatherNodeFaces actually frees the bsp and
+  rebuild the surfaces.
+
+CSG: Constructive Solid Geometry (Technique used in solid modeling. Constructive solid geometry allows a modeler to create a complex surface or object by using Boolean operators to combine objects.)
+http://www.flipcode.com/archives/Constructive_Solid_Geometry.shtml
+
+Good CSG Union stuff
+http://mattn.ninex.info/files/MAPFiles.pdf
+
+Laidlaw and Naylor (BSP based approach)
+Laidlaw paper: http://www.cs.brown.edu/research/vis/docs/pdf/Laidlaw-1986-CSG.pdf
+
+The CSG system relies on a faked OOP system with two objects "inside" in csg4.c and "ouside" in outside.c
+
+Face splitting against a plane is used all across the board and seems to be seems to be  Sutherland-Hodgma inspired.
+
+QBSP :
+======
+
+
+Summarized QBSP call tree :
+===========================
+
+Quake1 MAP format contains entities. The world is described as an entity which is ALWAYS the first entity in the map file.
+The world entity can be recognized because it has the key/value: "classname"	"worldspawn"
+If the first entity in the map file does not have the right classname (worldspawn): This is a faulty file.
+
+mbrush_t brush_t: 
+  - The map editor delivers volumes as a collection of plan (4 minimun for a Tetrahedron, no upper limit). 
+  - They are read from the MAP file as mbrush_t.
+  - Plan are clipped against each other in order to generate facelet grouped in brush_t.
+surface_t: Volume formed by the facelet are processed further (discarding invisible facelet) and clipping volume against
+each other. In the end only a skin remains, made of surface_t, each containing faces.
+
+mbrush_t (set of plans)--> brush_t (Set of face_t) --> (surface_t)
+
+Important note: A Surface is not necessarly flat. It is the result of brush volume clipped against each other in order to keep only a visible skin.
+Depending on how brushes interact with each other, a surface with many more faces than the brush_t add.
+
+ main() //qbsp.c
+ {
+   ProcessFile (sourcename, destname)
+   {
+     LoadMapFile
+     {
+     | LoadFile //Read text from HardDrive to RAM
+     | while 
+     | ( ParseEntity () //Read all brushes in an entity. The Quake map in one entity made of thousands of brushes.
+     |   {
+     |      //Read mbrush_t, store result in mapbrushes and add brush to entity's mbrush linked list.
+     |   }
+     | )
+     | 
+     }
+     
+     //At this point we have the world entity as an entity_t mbrush
+     
+     BeginBSPFile
+     
+     CreateHulls
+     {
+          ProcessEntity (entnum)
+          {
+            //Entity is now a set of mbrush_t
+          
+            ent = &entities[entnum];   
+            
+            // Intersect all plans in the mbrush_t, generate actual faces and group them in brush_t
+            bs = Brush_LoadEntity (ent, hullnum);
+        
+            //Entity is now a set of brush_t
+            
+            // take the brush_ts and clip off all overlapping and contained faces,leaving a perfect skin of the model with no hidden faces         
+            brushset = bs;
+            surfs = CSGFaces (bs)
+            
+            // A Surface is not necessarly flat. It is the result of brush volume clipped against each other in order to keep only
+            // a visible skin.
+            
+            if (entnum == 0 && !nofill)	// assume non-world bmodels are simple
+            {
+                 PortalizeWorld (nodes);
+                 if (FillOutside (nodes))
+                 {
+                 |   FreeAllPortals (nodes);
+                 |
+                 |   // get the remaining faces together into surfaces again
+                 |   surfs = GatherNodeFaces (nodes);
+                 |
+                 |   // merge polygons
+                 |   MergeAll (surfs);
+                 |
+                 |   // make a really good tree
+                 |   nodes = SolidBSP (surfs, false);
+                 |
+                 |   // make the real portals for vis tracing
+                 |   PortalizeWorld (nodes);
+                 |
+                 |   // save portal file for vis tracing
+                 |   WritePortalfile (nodes);
+                 |
+                 |   // fix tjunctions
+                 |   tjunc (nodes);
+                 }
+                 FreeAllPortals (nodes);
+            }
+       
+            WriteNodePlanes (nodes);
+            MakeFaceEdges (nodes);
+       
+            //Write the BSP Nodes.
+            WriteDrawNodes (nodes);
+          }
+     }
+     ReadClipHull (1)
+     ReadClipHull (2)
+     
+     WriteEntitiesToString
+     FinishBSPFile
+   }
+ }
+
+
+Unrolled QBSP :
+===============
+
+
+		
+Portal is generated from the optimized BSP tree (optimized mean that the spliting plan was chosen according to the least-split 
+heurisitc instead of the mid-plan heuristic).
+
+
+		Q & A :
+		=======		
+		
+		1.BSP creation heuristic:
+		
+		Choose a surface, its plan is a candidate for becomming the splitting plan.
+		Chose the plan that will generate the least cut.
+		
+		Subdivizion stops when no more surfaces are available.
+		until all surfaces have been used. In the resulting final BSP leafs contain ONE surface
+		
+		When the BSP generator has no more surfaces, it looks at the content of the last splitted surface and set the leaf content.
+		
+		Testing proved all this wrong: By tracing I can see that some leafs contain 10 surfaces and 15 faces.....back to reading code:
+		
+		
+		On split, any surface that is right on the splitting plane is marked via onnode and cannot be used as splitting plane later.
+		
+		A leaf can contains several surfaces if they are parallel ( the split selector will never chose a face that
+		split no other polygon).
+
+		1. PartitionSurfaces recurse until a split plan is NOT returned. SelectPartition controls the recursion.
+		
+		
+		2. Why does a surface have several faces ?! A surface is supposed to be flat and can contain any number of vertices ?
+		
+		3. What is the average number of portal per leafs ? Per node ?
+		4. How is the leaf content determinated ?
+		5. When does the BSP building process stops splitting ?
+		6. What ends up in the PRT file ?
+		7. How is the splitting node chosen ?
+		
+		PartitionSurfaces: At each recursion step the intial surface linked list can be changed. surface->next is EXTREMY likely
+		to have been modified so using it, even for a leaf after the BSP has been built would be a non sense.
+
+
+Portals: It seems leak are an issue because the tool will not be able to determine which part is inside and which part is outside.
+Quake1 does not feature aeraportal (brush that modify the portal graph in realtime). https://developer.valvesoftware.com/wiki/Areaportal
+A nice explanation about aeraportal leaks (https://developer.valvesoftware.com/wiki/Areaportal). Explain that aeraportal
+can loop around itself.
+
+VIS :
+=====
+
+
+
+      
+
+QCC :
+=====
+
+QuakeC Reference Manual
+http://pages.cs.wisc.edu/~jeremyp/quake/quakec/quakec.pdf
+
+Good tutorial: 
+
+http://www.inside3d.com/showtutorial.php?id=153
+http://www.inside3d.com/showtutorial.php?id=154
+http://www.inside3d.com/showtutorial.php?id=156
+http://www.inside3d.com/showtutorial.php?id=157
+
+
+Looks like the compilation is the same as q3cc: The list of all the files to be compiled is in a file (here name progs.src).
+
+"progs.src" content :
+=====================
+			./qwprogs.dat
+
+			defs.qc
+			subs.qc
+			combat.qc
+			items.qc
+			weapons.qc
+			world.qc
+			client.qc
+			spectate.qc
+			player.qc
+			doors.qc
+			buttons.qc
+			triggers.qc
+			plats.qc
+			misc.qc
+
+			server.qc
+
+
+Note: qwprogs.dat is the output filename.

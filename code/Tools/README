@@ -1,0 +1,9 @@
+This is the source code of qbsp and vis: Quake preprocessing tools.
+
+They have been modified in order to trace the portal building system
+and the PVS building systems.
+
+Quake 1 maps have been released as GPL by John Romero on October 12, 2006 (In honour of Quake's 10th year).
+ 
+You can also use Q3Radiant: It features a built-in viewprt Portal Viewer that work on Quake1 files.
+
