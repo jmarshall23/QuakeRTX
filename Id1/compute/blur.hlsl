@@ -1,5 +1,5 @@
 #define KERNEL_SIZE         13
-#define HALF_KERNEL_SIZE    6
+#define HALF_KERNEL_SIZE    10
 
 #define NUM_THREADS_X       1024
 #define NUM_THREADS_Y       1
@@ -55,9 +55,11 @@ void hblur_main(uint3 gid : SV_GroupID, uint gindex : SV_GroupIndex, uint3 dispa
 	for (int i = -HALF_KERNEL_SIZE; i < HALF_KERNEL_SIZE; ++i) {
 		int index = gindex + i;
 		if (index >= 0 && index < NUM_THREADS_X) {
-		value += g_shared_input[index] * k_sample_weights[i + HALF_KERNEL_SIZE];
+		value += g_shared_input[index];
 		}    
 	}
+	
+	value = value / (HALF_KERNEL_SIZE * 2);
   }
   else
   {
@@ -87,9 +89,10 @@ void vblur_main(uint3 gid : SV_GroupID, uint gindex : SV_GroupIndex, uint3 dispa
 	for (int i = -HALF_KERNEL_SIZE; i < HALF_KERNEL_SIZE; ++i) {
 		int index = gindex + i;
 		if (index >= 0 && index < NUM_THREADS_X) {
-		value += g_shared_input[index] * k_sample_weights[i + HALF_KERNEL_SIZE];
+		value += g_shared_input[index];
 		}    
 	}
+	value = value / (HALF_KERNEL_SIZE * 2);
   }
   else
   {

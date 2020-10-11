@@ -16,6 +16,9 @@ float sky_map_x, sky_map_y, sky_map_w, sky_map_h;
 
 tr_renderer *renderer;
 
+cvar_t r_pov_x = { "r_fov_x", "16", CVAR_ARCHIVE };
+cvar_t r_pov_y = { "r_fov_y", "9", CVAR_ARCHIVE };
+
 ComPtr<IDXGISwapChain3> m_swapChain;
 ComPtr<ID3D12Device5> m_device;
 ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
@@ -97,6 +100,9 @@ GL_InitRaytracing
 */
 void GL_InitRaytracing(int width, int height) {
 	Con_Printf("------ GL_InitRaytracing -------\n");
+
+	Cvar_RegisterVariable(&r_pov_x);
+	Cvar_RegisterVariable(&r_pov_y);
 
 	{
 		nv_helpers_dx12::RootSignatureGenerator rsc;
@@ -785,8 +791,8 @@ void GL_CalcFov(float base_fov, float& fov_x, float& fov_y) {
 	fov_y = y * 360.0f / M_PI;
 
 	// 16:9
-	ratio_x = 16.0f;
-	ratio_y = 9.0f;
+	ratio_x = r_pov_x.value;
+	ratio_y = r_pov_y.value;
 
 	y = ratio_y / tan(fov_y / 360.0f * M_PI);
 	fov_x = atan2(ratio_x, y) * 360.0f / M_PI;

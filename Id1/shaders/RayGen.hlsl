@@ -234,8 +234,8 @@ float3 CalculateClouds() {
 		   //}
 		   //else
 		   {
-				gOutput[launchIndex].xyz = lerp(gOutput[launchIndex], float4(payload.colorAndDistance.rgb, 1.f), 0.3);
-				gLightOutput[launchIndex].xyz = lerp(gLightOutput[launchIndex], float4(payload.lightColor.rgb, 1.f), 0.3);
+				//gOutput[launchIndex].xyz = lerp(gOutput[launchIndex], float4(payload.colorAndDistance.rgb, 1.f), 0.3);
+				gLightOutput[launchIndex].xyz = lerp(gLightOutput[launchIndex], float4(payload.colorAndDistance.rgb * payload.lightColor.rgb * 4, 1.f), 0.3);
 		   }
 	}
 }
