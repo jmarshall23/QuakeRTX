@@ -134,6 +134,7 @@ void GL_InitRaytracing(int width, int height) {
 			  {2 /*t2*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*megatexture*/, 5},
 			  {3 /*t3*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/, 2},
 			  {4 /*t4*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/, 6},
+			  {0 /*b0*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV /*Camera parameters*/, 3},
 			});
 		m_hitSignature = rsc.Generate(m_device.Get(), true);
 	}
@@ -146,6 +147,7 @@ void GL_InitRaytracing(int width, int height) {
 			  {2 /*t2*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*megatexture*/, 5},
 			  {3 /*t3*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/, 2},
 			  {4 /*t4*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/, 6},
+			  {0 /*b0*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV /*Camera parameters*/, 3},
 			});
 		m_shadowSignature = rsc.Generate(m_device.Get(), true);
 	}
@@ -362,16 +364,16 @@ void GL_Init(HWND hwnd, HINSTANCE hinstance, int width, int height)
 #if defined(_DEBUG)
 	// Enable the debug layer (requires the Graphics Tools "optional feature").
 	// NOTE: Enabling the debug layer after device creation will invalidate the active device.
-	//{
-	//	ComPtr<ID3D12Debug> debugController;
-	//	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
-	//	{
-	//		debugController->EnableDebugLayer();
-	//
-	//		// Enable additional debug layers.
-	//		dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-	//	}
-	//}
+	{
+		ComPtr<ID3D12Debug> debugController;
+		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+		{
+			debugController->EnableDebugLayer();
+	
+			// Enable additional debug layers.
+			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+		}
+	}
 #endif
 
 	ComPtr<IDXGIFactory4> factory;

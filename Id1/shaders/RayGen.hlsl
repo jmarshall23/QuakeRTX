@@ -243,7 +243,8 @@ float getFogFactor(float d)
 		   //else
 		   {
 				//gOutput[launchIndex].xyz = lerp(gOutput[launchIndex], float4(payload.colorAndDistance.rgb, 1.f), 0.3);
-				gLightOutput[launchIndex].xyz = lerp(gLightOutput[launchIndex], float4(payload.colorAndDistance.rgb * payload.lightColor.rgb * 4, 1.f), 0.3);
+				float spec_contrib = hit.worldOrigin.w;
+				gLightOutput[launchIndex].xyz = lerp(gLightOutput[launchIndex], float4(payload.colorAndDistance.rgb * payload.lightColor.rgb * 8 * spec_contrib, 1.f), 0.3);
 		   }
 	}
 	
@@ -251,7 +252,7 @@ float getFogFactor(float d)
 	if(hit.colorAndDistance.w != -1)
 	{
 		float3 viewPos = float3(timeViewOrg.y, timeViewOrg.z, timeViewOrg.w);
-		float fog = getFogFactor(length(hit.worldOrigin - viewPos));
+		float fog = getFogFactor(length(hit.worldOrigin.xyz - viewPos));
 		if(fogInfo.z == 1) {
 			gOutput[launchIndex].xyz = lerp(gOutput[launchIndex].xyz, float3(0.0, 0.0, 1.0), fog);
 		}

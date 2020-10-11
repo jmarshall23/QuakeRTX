@@ -21,6 +21,18 @@ struct sceneLightInfo_t {
 	float4 light_color;
 };
 
+// #DXR Extra: Perspective Camera
+cbuffer CameraParams : register(b0)
+{
+  float4 timeViewOrg;
+  float4 skyInfo;
+  float4 fogInfo;
+  float4 notUsed1;
+  float4x4 projection;
+  float4x4 viewI;
+  float4x4 projectionI;
+}
+
 
 StructuredBuffer<STriVertex> BTriVertex : register(t0);
 Texture2D<float4> MegaTexture : register(t1);
@@ -147,6 +159,73 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 	return shadowPayload.isHit;
 }
 
+// better noise function available at https://github.com/ashima/webgl-noise
+float rand( float2 co ) {
+    return frac( sin( dot( co.xy, float2( 12.9898, 78.233 ) ) ) * 43758.5453 );
+}
+
+float DistributionGGX(float3 N, float3 H, float roughness)
+{
+    float a      = roughness*roughness;
+    float a2     = a*a;
+    float NdotH  = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+	float PI = 3.14159265359;
+
+	
+    float num   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+	
+    return num / denom;
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
+
+    float num   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+	
+    return num / denom;
+}
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
+	
+    return ggx1 * ggx2;
+}
+
+float3 fresnelSchlick(float cosTheta, float3 F0)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+} 
+
+float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 Cd, float3 metallic)
+{
+	float3 V = normalize(cameraVector);
+	float3 H = normalize(V + L);
+
+	float3 F0 = float3(0.04, 0.04, 0.04); 
+	F0 = lerp(F0, Cd.xyz, metallic.xyz);
+			
+	// cook-torrance brdf
+	float NDF = DistributionGGX(N, H, roughness);        
+	float G   = GeometrySmith(N, V, L, roughness);      
+	float3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);       
+			
+	float3 kS = F;
+	float3 kD = float3(1.0, 1.0, 1.0) - kS;
+	kD *= 1.0 - metallic;	  
+			
+	float3 numerator    = NDF * G * F;
+	float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
+	return numerator / max(denominator, 0.001);  
+}
 
 [shader("closesthit")] void ClosestHit(inout HitInfo payload,
                                        Attributes attrib) {
@@ -154,29 +233,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
       float3(1.f - attrib.bary.x - attrib.bary.y, attrib.bary.x, attrib.bary.y);
 	  
 	  
-	//float4 lightpositions[9] = {
-	//	float4(-891.667, 469.175, 1863.288, 2000),
-	//	float4(224.627, 296.664, 1944.997, 300),
-	//	float4(224.627, 296.664, 1690.184, 300),
-	//	float4(-1952.994, 193.610, 1863.288, 300),
-	//	float4(-1952.994, 112.598, 1425.305, 300),
-	//	float4(-1952.994, 211.580, 666.719, 900),
-	//	float4(-1810.802, -1.523, 863.279, 300),
-	//	float4(-2163.917, -1.523, 863.279, 300),
-	//	float4(-1917.619, -1.523, 329.545, 300),
-	//};
-	//
-	//float4 lightcolor[9] = {
-	//	float4(	1, 1, 1, 1.5f ),
-	//	float4(	253.0 / 255, 207.0 / 255, 88.0 / 255, 3.0f ),
-	//	float4(	253.0 / 255, 207.0 / 255, 88.0 / 255, 3.0f ),
-	//	float4(	253.0 / 255, 207.0 / 255, 88.0 / 255, 3.0f ),
-	//	float4(	253.0 / 255, 207.0 / 255, 88.0 / 255, 3.0f ),
-	//	float4(	1, 1, 1, 1.5f ),
-	//	float4(	253.0 / 255, 207.0 / 255, 88.0 / 255, 3.0f ),
-	//	float4(	253.0 / 255, 207.0 / 255, 88.0 / 255, 3.0f ),
-	//	float4(	253.0 / 255, 207.0 / 255, 88.0 / 255, 3.0f ),
-	//};
+  float3 viewPos = float3(timeViewOrg.y, timeViewOrg.z, timeViewOrg.w);	
 
   uint vertId = BInstanceProperties[InstanceID()].startVertex + (3 * PrimitiveIndex());
   float3 hitColor = float3(1, 0, 0);
@@ -193,6 +250,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 	normal = -normal;
   
   // 2 is emissive
+  float spec_contrib = 0.0;
   if(BTriVertex[vertId + 0].st.z != 2 && BTriVertex[vertId + 0].st.z != 3)
   {
 	for(int i = 0; i < 64; i++)
@@ -213,7 +271,10 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
 		{
 				if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance))
 				{
+					float3 V = viewPos - worldOrigin;
+					float spec = CalcPBR(V, normal, normalize(centerLightDir), 0.5, float3(1, 1, 1), float3(0.5, 0.5, 0.5));
 					ndotl += lightInfo[i].light_color.xyz * falloff; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
+					spec_contrib += spec * falloff * 4;
 				}
 		}	  
 		//  debug = normal;
@@ -282,6 +343,7 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
   payload.colorAndDistance = float4(hitColor, 1.0);//float4(hitColor * ndotl * debug, RayTCurrent());
   payload.lightColor = float4(ndotl, BTriVertex[vertId + 0].st.z);
   payload.worldOrigin.xyz = worldOrigin.xyz;
+  payload.worldOrigin.w = spec_contrib;
 
   payload.worldNormal.x = normal.x;
   payload.worldNormal.y = normal.y;
