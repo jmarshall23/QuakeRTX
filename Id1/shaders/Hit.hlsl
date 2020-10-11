@@ -273,7 +273,7 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 				{
 					float3 V = viewPos - worldOrigin;
 					float spec = CalcPBR(V, normal, normalize(centerLightDir), 0.5, float3(1, 1, 1), float3(0.5, 0.5, 0.5));
-					ndotl += lightInfo[i].light_color.xyz * falloff; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
+					ndotl += lightInfo[i].light_color.xyz * falloff * 2; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
 					spec_contrib += spec * falloff * 4;
 				}
 		}	  
