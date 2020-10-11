@@ -44,7 +44,7 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 		msurface_t* fa = &surfaces[i];
 		dxrSurface_t surf;
 
-		int materialInfo = 1;
+		int materialInfo = 0;
 
 		if(strstr(map_name, "e1m7")) {
 			materialInfo = 1;
