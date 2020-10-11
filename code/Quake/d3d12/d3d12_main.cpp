@@ -853,6 +853,25 @@ void GL_Render(float x, float y, float z, float* viewAngles)
 	frameData[6] = sky_map_w;
 	frameData[7] = sky_map_h;
 
+	int contents = Mod_PointInLeaf(r_origin, cl.worldmodel)->contents;
+	if (contents == CONTENTS_WATER || contents == CONTENTS_SLIME || contents == CONTENTS_LAVA) {
+		frameData[8] = 1000.0f;
+		frameData[9] = 50.0f;
+		if (contents == CONTENTS_SLIME) {
+			frameData[10] = 3;
+		}
+		else if (contents == CONTENTS_LAVA) {
+			frameData[10] = 2;
+		}
+		else {
+			frameData[10] = 1;
+		}
+	}
+	else {
+		frameData[8] = 1500.0f;
+		frameData[9] = 800.0f;
+		frameData[10] = 0;
+	}
 
 	// Copy the matrix contents
 	uint8_t* pData;
