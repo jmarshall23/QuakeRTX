@@ -62,6 +62,10 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 			materialInfo = 1;
 		}
 
+		if (strstr(name, "afloor3_1")) {
+			materialInfo = 1;
+		}
+
 		if (strstr(name, "wall9_8")) {
 			materialInfo = 1;
 		}

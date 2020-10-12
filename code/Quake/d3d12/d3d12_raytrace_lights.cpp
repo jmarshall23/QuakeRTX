@@ -12,17 +12,22 @@ struct glLight_t {
 	vec4_t light_color;
 	vec3_t absmin;
 	vec3_t absmax;
+	vec4_t light_clamp;
+
 	//entity_t* ent;
 	int leafnums[16];
 	int lightStyle;
 
 	int num_leafs;
 	int distance;
+
+	bool isAreaLight;
 };
 
 struct sceneLightInfo_t {
 	vec4_t origin_radius;
 	vec4_t light_color;
+	vec4_t light_clamp;
 };
 
 glLight_t worldLights[MAX_WORLD_LIGHTS];
@@ -91,7 +96,7 @@ void GL_FindTouchedLeafs(glLight_t* ent, mnode_t* node)
 }
 
 void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radius, int lightStyle, float r, float g, float b) {
-	glLight_t light;
+	glLight_t light = { };
 	light.origin_radius[0] = x;
 	light.origin_radius[1] = y;
 	light.origin_radius[2] = z;
@@ -115,6 +120,43 @@ void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radiu
 	light.num_leafs = 0;
 	GL_FindTouchedLeafs(&light, loadmodel->nodes);
 
+	worldLights[numWorldLights++] = light;
+}
+
+void GL_RegisterWorldAreaLight(vec3_t normal, vec3_t mins, vec3_t maxs, int lightStyle, float radius) {
+	glLight_t light = { };
+	vec3_t origin;
+	vec3_t light_clamp;
+
+	VectorAdd(maxs, mins, origin);
+	VectorSubtract(maxs, mins, light_clamp);
+
+	light.light_clamp[0] = light_clamp[0];
+	light.light_clamp[1] = light_clamp[1];
+	light.light_clamp[2] = light_clamp[2];
+
+	light.origin_radius[0] = origin[0] * 0.5f;
+	light.origin_radius[1] = origin[1] * 0.5f;
+	light.origin_radius[2] = origin[2] * 0.5f;
+	light.origin_radius[3] = radius; // area light
+
+	light.light_color[0] = normal[0];
+	light.light_color[1] = normal[1];
+	light.light_color[2] = normal[2];
+
+	light.absmin[0] = mins[0];
+	light.absmin[1] = mins[1];
+	light.absmin[2] = mins[2];
+
+	light.absmax[0] = maxs[0];
+	light.absmax[1] = maxs[1];
+	light.absmax[2] = maxs[2];
+
+	light.lightStyle = lightStyle;
+
+	light.isAreaLight = true;
+
+	light.num_leafs = -1; // arealight
 	worldLights[numWorldLights++] = light;
 }
 
@@ -165,30 +207,51 @@ void GL_BuildLightList(float x, float y, float z) {
 		}
 
 		glLight_t * ent = &worldLights[i];
-		vec3_t viewpos = { x, y, z };
-		byte* pvs = SV_FatPVS(viewpos, cl.worldmodel);
 
-		int d;
-		for (d = 0; d < ent->num_leafs; d++)
-			if (pvs[ent->leafnums[d] >> 3] & (1 << (ent->leafnums[d] & 7)))
-				break;
+		if (!ent->isAreaLight)
+		{
+			vec3_t viewpos = { x, y, z };
+			byte* pvs = SV_FatPVS(viewpos, cl.worldmodel);
 
-		if (d == ent->num_leafs)
-			continue;
+			int d;
+			for (d = 0; d < ent->num_leafs; d++)
+				if (pvs[ent->leafnums[d] >> 3] & (1 << (ent->leafnums[d] & 7)))
+					break;
+
+			if (d == ent->num_leafs)
+				continue;
+		}
 
 		sceneLights[numVisLights].origin_radius[0] = ent->origin_radius[0];
 		sceneLights[numVisLights].origin_radius[1] = ent->origin_radius[1];
 		sceneLights[numVisLights].origin_radius[2] = ent->origin_radius[2];
-		if(ent->lightStyle) {
-			sceneLights[numVisLights].origin_radius[3] = d_lightstylevalue[ent->lightStyle];
+
+		if (!ent->isAreaLight)
+		{
+			if (ent->lightStyle) {
+				sceneLights[numVisLights].origin_radius[3] = d_lightstylevalue[ent->lightStyle];
+			}
+			else {
+				sceneLights[numVisLights].origin_radius[3] = ent->origin_radius[3];
+			}
 		}
-		else {
-			sceneLights[numVisLights].origin_radius[3] = ent->origin_radius[3];
+		else
+		{
+			if (ent->lightStyle) {
+				sceneLights[numVisLights].origin_radius[3] = -d_lightstylevalue[ent->lightStyle];
+			}
+			else {
+				sceneLights[numVisLights].origin_radius[3] = -ent->origin_radius[3];
+			}
 		}
 
 		sceneLights[numVisLights].light_color[0] = ent->light_color[0];
 		sceneLights[numVisLights].light_color[1] = ent->light_color[1];
 		sceneLights[numVisLights].light_color[2] = ent->light_color[2];
+
+		sceneLights[numVisLights].light_clamp[0] = ent->light_clamp[0];
+		sceneLights[numVisLights].light_clamp[1] = ent->light_clamp[1];
+		sceneLights[numVisLights].light_clamp[2] = ent->light_clamp[2];
 
 		numVisLights++;
 	}

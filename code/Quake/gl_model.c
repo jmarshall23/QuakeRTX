@@ -2355,6 +2355,28 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 	}
 	mod = bspMod;
 	bspMod->dxrModel[0] = GL_LoadDXRMesh(bspMod->surfaces, bspMod->numsurfaces);
+
+	// Area lights.
+	for (i = 0; i < mod->numsurfaces; i++) {
+		vec3_t mins, maxs;
+
+		msurface_t* surface = &mod->surfaces[i];
+		if (!strstr(surface->texinfo->texture->name, "light"))
+			continue;
+
+		mplane_t* plane = surface->plane;
+
+		ClearBounds(mins, maxs);
+		glpoly_t* p;
+		for (p = surface->polys; p; p = p->next) {
+			for (int d = 0; d < p->numverts; d++) {
+				AddPointToBounds(p->verts[d], mins, maxs);
+			}
+		}
+
+	//	GL_RegisterWorldAreaLight(plane->normal, mins, maxs, 0, 200);
+	}
+
 //
 // set up the submodels (FIXME: this is confusing)
 //

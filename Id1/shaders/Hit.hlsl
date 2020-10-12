@@ -19,6 +19,7 @@ struct SInstanceProperties
 struct sceneLightInfo_t {
 	float4 origin_radius;
 	float4 light_color;
+	float4 light_clamp;
 };
 
 // #DXR Extra: Perspective Camera
@@ -51,6 +52,14 @@ float attenuation(float r, float f, float d, float3 normal, float3 dir) {
 	//return pow(max(0.0, (r - d) / 128), 1.0) * angle;
 	
 	return (r / pow(d, 1.3)) * angle;
+}
+float attenuation_arealight(float r, float f, float d, float3 normal, float3 dir) {
+	float angle = dot (dir, normal);
+	//float scalecos = 0.5;
+	//angle = (1.0-scalecos) + scalecos*angle;
+	//return pow(max(0.0, (r - d) / 128), 1.0) * angle;
+	
+	return (r / pow(d, 1.3));
 }
 
 // Utility function to get a vector perpendicular to an input vector 
@@ -103,12 +112,12 @@ float3 getCosHemisphereSample(inout uint randSeed, float3 hitNorm)
 }
 
 
-bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance)
+bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance, float3 normal)
 {	
 	 // Fire a shadow ray. The direction is hard-coded here, but can be fetched
      // from a constant-buffer
      RayDesc ray;
-     ray.Origin = worldOrigin;
+     ray.Origin = worldOrigin + (normal * 5);
      ray.Direction = lightDir;
      ray.TMin = 0.01;
      ray.TMax = distance;
@@ -241,7 +250,7 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
   // Find the world - space hit position
   float3 worldOrigin = WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
   
-  float3 ndotl = float3(0.3, 0.3, 0.3);
+  float3 ndotl = float3(0.2, 0.2, 0.2);
   float3 debug = float3(1, 1, 1);
   
   float3 normal = BTriVertex[vertId + 0].normal;
@@ -258,33 +267,67 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 		if(lightInfo[i].origin_radius.w == 0)
 			continue;
 		
-		float3 lightPos = (lightInfo[i].origin_radius.xyz);
-		float3 centerLightDir = lightPos - worldOrigin;
-		float lightDistance = length(centerLightDir);
-		float falloff = attenuation(lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir)) - 0.04;  
-		
-		falloff = clamp(falloff, 0.0, 1.0);
-		
-		//bool isShadowed = dot(normal, centerLightDir) < 0;	  
-		//if(!isShadowed)
-		if(falloff > 0)
+		if(lightInfo[i].origin_radius.w > 0) // point lights
 		{
-				if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance))
+			float3 lightPos = (lightInfo[i].origin_radius.xyz);
+			float3 centerLightDir = lightPos - worldOrigin;
+			float lightDistance = length(centerLightDir);
+			float falloff = attenuation(lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir)) - 0.04;  
+			
+			falloff = clamp(falloff, 0.0, 1.0);
+			
+			//bool isShadowed = dot(normal, centerLightDir) < 0;	  
+			//if(!isShadowed)
+			if(falloff > 0)
+			{
+					if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance, normal))
+					{
+						float3 V = viewPos - worldOrigin;
+						float spec = CalcPBR(V, normal, normalize(centerLightDir), 0.5, float3(1, 1, 1), float3(0.5, 0.5, 0.5));
+						ndotl += lightInfo[i].light_color.xyz * falloff * 2; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
+						spec_contrib += spec * falloff * 4;
+					}
+			}	  			
+		}
+		else // area lights
+		{
+			// Project the point on our plane.
+			float3 v = worldOrigin - lightInfo[i].origin_radius.xyz; // origin_radius is the center of our plane.
+			float dist = dot(v, lightInfo[i].light_color.xyz); // lightInfo[i].light_color.xyz is the normal, temp hack!
+			float3 plane_point = worldOrigin - dist * lightInfo[i].light_color.xyz;
+			
+			// Clamp the point within the distance of the plane.
+			float3 plane_point_dist = plane_point - lightInfo[i].origin_radius.xyz;
+			plane_point_dist[0] = clamp(plane_point_dist[0], -lightInfo[i].light_clamp[0] * 0.5, lightInfo[i].light_clamp[0] * 0.5);
+			plane_point_dist[1] = clamp(plane_point_dist[1], -lightInfo[i].light_clamp[1] * 0.5, lightInfo[i].light_clamp[1] * 0.5);
+			plane_point_dist[2] = clamp(plane_point_dist[2], -lightInfo[i].light_clamp[2] * 0.5, lightInfo[i].light_clamp[2] * 0.5);
+			
+			float3 clamped_point = lightInfo[i].origin_radius.xyz + plane_point_dist;
+			
+			float3 centerLightDir = clamped_point - worldOrigin;
+			float lightDistance = length(centerLightDir);
+			
+			float falloff = attenuation_arealight(-lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir)) - 0.04;  			
+			falloff = clamp(falloff, 0.0, 1.0);
+					
+			if(falloff > 0)
+			{
+				if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance, normal))
 				{
 					float3 V = viewPos - worldOrigin;
 					float spec = CalcPBR(V, normal, normalize(centerLightDir), 0.5, float3(1, 1, 1), float3(0.5, 0.5, 0.5));
-					ndotl += lightInfo[i].light_color.xyz * falloff * 2; // normalize(centerLightDir); //max(0.f, dot(normal, normalize(centerLightDir))); 
+					ndotl += falloff;
 					spec_contrib += spec * falloff * 4;
 				}
-		}	  
-		//  debug = normal;
+			}
+		}
 	}
   }
   else
   {
 	ndotl = float3(1, 1, 1);
   }
-  
+  /*
   if(BTriVertex[vertId + 0].st.z >= 0)
   {
 	for(int i = 4; i < 9; i++)
@@ -293,11 +336,12 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 		uint randSeed = initRand( pixIdx.x + pixIdx.y * 1920, 0 );
 		int r = length(float3(worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y)) * i;
 		float3 worldDir = getCosHemisphereSample(r, normal);
-		if(IsLightShadowed(worldOrigin, worldDir, 5 * ( i * 0.1) )) {
+		if(IsLightShadowed(worldOrigin, worldDir, 5 * ( i * 0.1) ), normal) {
 			ndotl *= 0.1;
 		}
 	}
   }
+  */
   
   if(BTriVertex[vertId + 0].vtinfo.x != -1)
   {

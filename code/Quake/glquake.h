@@ -96,7 +96,7 @@ void GL_BlitUIImage(int texnum, int srcx, int srcy, int destx, int desty);
 void GL_BlitUIImageUV(int texnum, float u, float v, int destx, int desty, int w, int h);
 void GL_BlitUIImageUVNoScale(int texnum, float u, float v, int destx, int desty, int w, int h);
 void GL_RegisterWorldLight(entity_t* ent, float x, float y, float z, float radius, int lightStyle, float r, float g, float b);
-
+void GL_RegisterWorldAreaLight(vec3_t normal, vec3_t mins, vec3_t maxs, int lightStyle, float radius);
 void GL_SetUICanvas(float x, float y, float width, float height);
 
 void R_TimeRefresh_f (void);
@@ -406,6 +406,35 @@ void GLSLGamma_GammaCorrect (void);
 void R_ScaleView_DeleteTexture (void);
 
 float GL_WaterAlphaForSurface (msurface_t *fa);
+
+inline void ClearBounds(vec3_t mins, vec3_t maxs) {
+	mins[0] = mins[1] = mins[2] = 99999;
+	maxs[0] = maxs[1] = maxs[2] = -99999;
+}
+
+inline void AddPointToBounds(const vec3_t v, vec3_t mins, vec3_t maxs) {
+	if (v[0] < mins[0]) {
+		mins[0] = v[0];
+	}
+	if (v[0] > maxs[0]) {
+		maxs[0] = v[0];
+	}
+
+	if (v[1] < mins[1]) {
+		mins[1] = v[1];
+	}
+	if (v[1] > maxs[1]) {
+		maxs[1] = v[1];
+	}
+
+	if (v[2] < mins[2]) {
+		mins[2] = v[2];
+	}
+	if (v[2] > maxs[2]) {
+		maxs[2] = v[2];
+	}
+}
+
 
 #endif	/* __GLQUAKE_H */
 
