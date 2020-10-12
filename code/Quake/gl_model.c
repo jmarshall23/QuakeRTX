@@ -2374,7 +2374,7 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 			}
 		}
 
-	//	GL_RegisterWorldAreaLight(plane->normal, mins, maxs, 0, 200);
+		GL_RegisterWorldAreaLight(plane->normal, mins, maxs, 0, 250);
 	}
 
 //

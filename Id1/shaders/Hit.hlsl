@@ -117,9 +117,9 @@ bool IsLightShadowed(float3 worldOrigin, float3 lightDir, float distance, float3
 	 // Fire a shadow ray. The direction is hard-coded here, but can be fetched
      // from a constant-buffer
      RayDesc ray;
-     ray.Origin = worldOrigin + (normal * 5);
+     ray.Origin = worldOrigin;
      ray.Direction = lightDir;
-     ray.TMin = 0.01;
+     ray.TMin = 3.0;
      ray.TMax = distance;
      bool hit = true;
      
@@ -260,6 +260,7 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
   
   // 2 is emissive
   float spec_contrib = 0.0;
+  float emissive = 1;
   if(BTriVertex[vertId + 0].st.z != 2 && BTriVertex[vertId + 0].st.z != 3)
   {
 	for(int i = 0; i < 64; i++)
@@ -296,18 +297,22 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 			float dist = dot(v, lightInfo[i].light_color.xyz); // lightInfo[i].light_color.xyz is the normal, temp hack!
 			float3 plane_point = worldOrigin - dist * lightInfo[i].light_color.xyz;
 			
+			float x_sign = sign(lightInfo[i].light_clamp[0] - 1.0f);
+			float y_sign = sign(lightInfo[i].light_clamp[1] - 1.0f);
+			float z_sign = sign(lightInfo[i].light_clamp[2] - 1.0f);
+			
 			// Clamp the point within the distance of the plane.
 			float3 plane_point_dist = plane_point - lightInfo[i].origin_radius.xyz;
-			plane_point_dist[0] = clamp(plane_point_dist[0], -lightInfo[i].light_clamp[0] * 0.5, lightInfo[i].light_clamp[0] * 0.5);
-			plane_point_dist[1] = clamp(plane_point_dist[1], -lightInfo[i].light_clamp[1] * 0.5, lightInfo[i].light_clamp[1] * 0.5);
-			plane_point_dist[2] = clamp(plane_point_dist[2], -lightInfo[i].light_clamp[2] * 0.5, lightInfo[i].light_clamp[2] * 0.5);
+			plane_point_dist[0] = clamp(plane_point_dist[0], -lightInfo[i].light_clamp[0] * 0.5, lightInfo[i].light_clamp[0] * 0.5) * x_sign;
+			plane_point_dist[1] = clamp(plane_point_dist[1], -lightInfo[i].light_clamp[1] * 0.5, lightInfo[i].light_clamp[1] * 0.5) * y_sign;
+			plane_point_dist[2] = clamp(plane_point_dist[2], -lightInfo[i].light_clamp[2] * 0.5, lightInfo[i].light_clamp[2] * 0.5) * z_sign;
 			
-			float3 clamped_point = lightInfo[i].origin_radius.xyz + plane_point_dist;
+			float3 clamped_point = lightInfo[i].origin_radius.xyz - plane_point_dist;
 			
-			float3 centerLightDir = clamped_point - worldOrigin;
+			float3 centerLightDir = clamped_point - (worldOrigin);
 			float lightDistance = length(centerLightDir);
 			
-			float falloff = attenuation_arealight(-lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir)) - 0.04;  			
+			float falloff = attenuation(-lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir)) - 0.04;  			
 			falloff = clamp(falloff, 0.0, 1.0);
 					
 			if(falloff > 0)
@@ -316,7 +321,7 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 				{
 					float3 V = viewPos - worldOrigin;
 					float spec = CalcPBR(V, normal, normalize(centerLightDir), 0.5, float3(1, 1, 1), float3(0.5, 0.5, 0.5));
-					ndotl += falloff;
+					ndotl += falloff * 4;
 					spec_contrib += spec * falloff * 4;
 				}
 			}
@@ -326,6 +331,7 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
   else
   {
 	ndotl = float3(1, 1, 1);
+	emissive = 2;
   }
   /*
   if(BTriVertex[vertId + 0].st.z >= 0)
@@ -365,7 +371,7 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 	  //u *= BTriVertex[vertId + 0].vtinfo.z + (BTriVertex[vertId + 0].vtinfo.x / 4096);
 	  //v *= BTriVertex[vertId + 0].vtinfo.w + (BTriVertex[vertId + 0].vtinfo.y / 4096);
 	  //hitColor = float3(u, v, 0);
-	  hitColor = MegaTexture.Load(int3(u * 4096, v * 4096, 0)).rgb; //normalize(BTriVertex[vertId + 0].vertex) * 4;
+	  hitColor = MegaTexture.Load(int3(u * 4096, v * 4096, 0)).rgb * emissive; //normalize(BTriVertex[vertId + 0].vertex) * 4;
   }
   else
   {

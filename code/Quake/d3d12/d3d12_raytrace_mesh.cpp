@@ -135,6 +135,10 @@ void GL_LoadBottomLevelAccelStruct(dxrMesh_t* mesh, msurface_t* surfaces, int nu
 			materialInfo = 2;
 		}
 
+		if (strstr(name, "light")) {
+			materialInfo = 2;
+		}
+
 		GL_FindMegaTile(name, x, y, w, h);
 
 		BuildSurfaceDisplayList(fa);
