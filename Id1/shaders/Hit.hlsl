@@ -312,7 +312,7 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 			float3 centerLightDir = clamped_point - (worldOrigin);
 			float lightDistance = length(centerLightDir);
 			
-			float falloff = attenuation(-lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir)) - 0.04;  			
+			float falloff = attenuation(-lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir)) - 0.2;  			
 			falloff = clamp(falloff, 0.0, 1.0);
 					
 			if(falloff > 0)
@@ -333,7 +333,9 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 	ndotl = float3(1, 1, 1);
 	emissive = 2;
   }
-  /*
+
+  ndotl = clamp(ndotl, 0.0, 1.0);
+
   if(BTriVertex[vertId + 0].st.z >= 0)
   {
 	for(int i = 4; i < 9; i++)
@@ -342,12 +344,12 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 		uint randSeed = initRand( pixIdx.x + pixIdx.y * 1920, 0 );
 		int r = length(float3(worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y)) * i;
 		float3 worldDir = getCosHemisphereSample(r, normal);
-		if(IsLightShadowed(worldOrigin, worldDir, 5 * ( i * 0.1) ), normal) {
+		if(IsLightShadowed(worldOrigin + (normal * 10), worldDir, 5 * ( i * 0.1), normal)) {
 			ndotl *= 0.1;
 		}
 	}
   }
-  */
+
   
   if(BTriVertex[vertId + 0].vtinfo.x != -1)
   {
