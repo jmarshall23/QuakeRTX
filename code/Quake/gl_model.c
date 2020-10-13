@@ -952,7 +952,7 @@ const char* Mod_ParseEdict(const char* data, edict_t* ent, qboolean skipClearHac
 Mod_LoadEntities
 =================
 */
-void Mod_LoadEntities (lump_t *l)
+qboolean Mod_LoadEntities (lump_t *l)
 {
 	char	entfilename[MAX_QPATH];
 	char		*ents;
@@ -981,7 +981,7 @@ void Mod_LoadEntities (lump_t *l)
 		{
 			loadmodel->entities = ents;
 			Con_DPrintf("Loaded external entity file %s\n", entfilename);
-			return;
+			return false;
 		}
 	}
 
@@ -1116,10 +1116,12 @@ _load_embedded:
 	if (!l->filelen)
 	{
 		loadmodel->entities = NULL;
-		return;
+		return false;
 	}
 	loadmodel->entities = (char *) Hunk_AllocName ( l->filelen, loadname);
 	memcpy (loadmodel->entities, mod_base + l->fileofs, l->filelen);
+
+	return rtLightsFile;
 }
 
 
@@ -2332,7 +2334,7 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 	Mod_LoadClipnodes (&header->lumps[LUMP_CLIPNODES], bsp2);
 	Mod_MakeHull0();
 
-	Mod_LoadEntities (&header->lumps[LUMP_ENTITIES]);
+	qboolean hasrtlights = Mod_LoadEntities (&header->lumps[LUMP_ENTITIES]);
 	Mod_LoadSubmodels (&header->lumps[LUMP_MODELS]);	
 
 	mod->numframes = 2;		// regular and alternate animation
@@ -2357,24 +2359,27 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 	bspMod->dxrModel[0] = GL_LoadDXRMesh(bspMod->surfaces, bspMod->numsurfaces);
 
 	// Area lights.
-	for (i = 0; i < mod->numsurfaces; i++) {
-		vec3_t mins, maxs;
+	if (!hasrtlights) // jmarshall: this can be removed, this is only here so the retail maps don't break!
+	{
+		for (i = 0; i < mod->numsurfaces; i++) {
+			vec3_t mins, maxs;
 
-		msurface_t* surface = &mod->surfaces[i];
-		if (!strstr(surface->texinfo->texture->name, "light"))
-			continue;
+			msurface_t* surface = &mod->surfaces[i];
+			if (!strstr(surface->texinfo->texture->name, "light"))
+				continue;
 
-		mplane_t* plane = surface->plane;
+			mplane_t* plane = surface->plane;
 
-		ClearBounds(mins, maxs);
-		glpoly_t* p;
-		for (p = surface->polys; p; p = p->next) {
-			for (int d = 0; d < p->numverts; d++) {
-				AddPointToBounds(p->verts[d], mins, maxs);
+			ClearBounds(mins, maxs);
+			glpoly_t* p;
+			for (p = surface->polys; p; p = p->next) {
+				for (int d = 0; d < p->numverts; d++) {
+					AddPointToBounds(p->verts[d], mins, maxs);
+				}
 			}
-		}
 
-		GL_RegisterWorldAreaLight(plane->normal, mins, maxs, 0, 500);
+			GL_RegisterWorldAreaLight(plane->normal, mins, maxs, 0, 500);
+		}
 	}
 
 //

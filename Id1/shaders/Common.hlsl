@@ -15,3 +15,8 @@ struct HitInfo {
 struct Attributes {
   float2 bary;
 };
+
+
+struct SecondHitInfo {
+   float4 payload_color;
+};

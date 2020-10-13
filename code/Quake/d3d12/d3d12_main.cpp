@@ -39,9 +39,11 @@ ComPtr<IDxcBlob> m_rayGenLibrary;
 ComPtr<IDxcBlob> m_hitLibrary;
 ComPtr<IDxcBlob> m_missLibrary;
 ComPtr<IDxcBlob> m_shadowLibrary;
+ComPtr<IDxcBlob> m_secondHitLibrary;
 
 ComPtr<ID3D12RootSignature> m_rayGenSignature;
 ComPtr<ID3D12RootSignature> m_hitSignature;
+ComPtr<ID3D12RootSignature> m_hitSecondSignature;
 ComPtr<ID3D12RootSignature> m_shadowSignature;
 ComPtr<ID3D12RootSignature> m_missSignature;
 
@@ -128,6 +130,18 @@ void GL_InitRaytracing(int width, int height) {
 
 	{
 		nv_helpers_dx12::RootSignatureGenerator rsc;
+		rsc.AddHeapRangesParameter(
+			{ 
+			  {1 /*u1*/, 1 /*1 descriptor */, 0 /*use the implicit register space 0*/,
+			  D3D12_DESCRIPTOR_RANGE_TYPE_UAV /* UAV representing the output buffer*/,
+			  1 /*heap slot where the UAV is defined*/}			
+			});
+
+		m_hitSecondSignature = rsc.Generate(m_device.Get(), true);
+	}
+
+	{
+		nv_helpers_dx12::RootSignatureGenerator rsc;
 		rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, 0);
 		rsc.AddHeapRangesParameter(
 			{ {1 /*t1*/, 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*megatexture*/, 4},
@@ -166,6 +180,9 @@ void GL_InitRaytracing(int width, int height) {
 	m_shadowLibrary = nv_helpers_dx12::CompileShaderLibrary(L"id1/shaders/ShadowRay.hlsl");
 	pipeline.AddLibrary(m_shadowLibrary.Get(),{ L"ShadowClosestHit", L"ShadowMiss" });
 
+	m_secondHitLibrary = nv_helpers_dx12::CompileShaderLibrary(L"id1/shaders/HitSecond.hlsl");
+	pipeline.AddLibrary(m_secondHitLibrary.Get(), { L"SecondClosestHit", L"SecondMiss" });
+
 	// In a way similar to DLLs, each library is associated with a number of
 	// exported symbols. This
 	// has to be done explicitly in the lines below. Note that a single library
@@ -195,6 +212,7 @@ void GL_InitRaytracing(int width, int height) {
 	pipeline.AddHitGroup(L"HitGroup", L"ClosestHit");
 	// Hit group for all geometry when hit by a shadow ray
 	pipeline.AddHitGroup(L"ShadowHitGroup", L"ShadowClosestHit");
+	pipeline.AddHitGroup(L"SecondHitGroup", L"SecondClosestHit");
 
 	// The following section associates the root signature to each shader. Note
 	// that we can explicitly show that some shaders share the same root signature
@@ -206,9 +224,12 @@ void GL_InitRaytracing(int width, int height) {
 	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"Miss" });
 	pipeline.AddRootSignatureAssociation(m_hitSignature.Get(), { L"HitGroup" });
 	// #DXR Extra - Another ray type
-	pipeline.AddRootSignatureAssociation(m_shadowSignature.Get(),{ L"ShadowHitGroup" });
+	pipeline.AddRootSignatureAssociation(m_shadowSignature.Get(),{ L"ShadowHitGroup" });	
 	// #DXR Extra - Another ray type
 	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"Miss", L"ShadowMiss" });
+
+	pipeline.AddRootSignatureAssociation(m_hitSecondSignature.Get(), { L"SecondHitGroup" });
+	pipeline.AddRootSignatureAssociation(m_missSignature.Get(), { L"Miss", L"SecondMiss" });
 	
 	// The payload size defines the maximum size of the data carried by the rays,
 	// ie. the the data
@@ -760,10 +781,12 @@ void GL_FinishDXRLoading(void)
 		// communicate their results through the ray payload
 		m_sbtHelper.AddMissProgram(L"Miss", {});
 		m_sbtHelper.AddMissProgram(L"ShadowMiss", {});
+		m_sbtHelper.AddMissProgram(L"SecondMiss", {});
 
 		// Adding the triangle hit shader
 		m_sbtHelper.AddHitGroup(L"HitGroup", { (void*)m_vertexBuffer->GetGPUVirtualAddress(), (UINT64 *) m_srvUavHeap->GetGPUDescriptorHandleForHeapStart().ptr });
 		m_sbtHelper.AddHitGroup(L"ShadowHitGroup", {});
+		m_sbtHelper.AddHitGroup(L"SecondHitGroup", { heapPointer });
 
 		// Compute the size of the SBT given the number of shaders and their
   // parameters
