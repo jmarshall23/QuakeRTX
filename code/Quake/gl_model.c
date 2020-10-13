@@ -2378,7 +2378,13 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 				}
 			}
 
-			GL_RegisterWorldAreaLight(plane->normal, mins, maxs, 0, 500);
+			int lightStyle = 0;
+
+			//if (strstr(surface->texinfo->texture->name, "light3_3")) {
+			//	lightStyle = 8;
+			//}
+
+			GL_RegisterWorldAreaLight(plane->normal, mins, maxs, lightStyle, 300);
 		}
 	}
 

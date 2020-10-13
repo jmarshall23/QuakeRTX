@@ -240,7 +240,7 @@ float3 FireSecondRay(float3 worldOrigin, float distance, float3 normal)
 			float3 centerLightDir = lightPos - bounceWorldOrigin;
 			float lightDistance = length(centerLightDir);
 			
-			r = (lightInfo[i].origin_radius.w / pow(lightDistance, 1.3));
+			r = (lightInfo[i].origin_radius.w / pow(lightDistance, 1.3)) - 1.0;
 		}
 		else // area lights
 		{
@@ -248,14 +248,16 @@ float3 FireSecondRay(float3 worldOrigin, float distance, float3 normal)
 			float3 centerLightDir = lightPos - bounceWorldOrigin;
 			float lightDistance = length(centerLightDir);
 			
-			r = (-lightInfo[i].origin_radius.w / pow(lightDistance, 1.3));
+			r = (-lightInfo[i].origin_radius.w / pow(lightDistance, 1.3)) - 0.3;
 		}
+		
+		r = clamp(r, 0.0, 1.0);
 		
 		result += float3(r, r, r);
 		numLights++;
 	}	
 	
-	return result / numLights;
+	return result;
 }
 
 // better noise function available at https://github.com/ashima/webgl-noise
@@ -482,12 +484,18 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 	// Fire the secondary bounce
 	{
 		int r = 1; //length(float3(worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y));
-		float3 worldDir = getCosHemisphereSample(r, normal);
-		ndotl += FireSecondRay(worldOrigin, 300, worldDir);
+		float3 bounce = float3(0, 0, 0);
+		for(int i = 4; i < 9; i++)
+		{
+			float3 worldDir = getCosHemisphereSample(r, normal) * i;
+			bounce += FireSecondRay(worldOrigin, 500, worldDir);
+		}
+		ndotl += (bounce / 5);
+		//ndotl += FireSecondRay(worldOrigin, 300, normal);
 	}
 
   //hitColor = float3(InstanceID(), 0, 0);
- // ndotl = max(0.2, ndotl) ;
+  ndotl += 0.15;
 
   payload.colorAndDistance = float4(hitColor, 1.0);//float4(hitColor * ndotl * debug, RayTCurrent());
   payload.lightColor = float4(ndotl, BTriVertex[vertId + 0].st.z);
