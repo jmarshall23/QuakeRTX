@@ -23,7 +23,7 @@ struct PostUniformBuffer_t {
 	int yoffset;
 };
 
-tr_buffer* m_uniform_buffer[20];
+static tr_buffer* m_uniform_buffer[20];
 
 void GL_InitCompositePass(tr_texture* albedoPass, tr_texture* lightPass, tr_texture* compositeStagingPass, tr_texture* compositePass, tr_texture *uiTexturePass) {
 	Con_Printf("Init Composite Pass...\n");

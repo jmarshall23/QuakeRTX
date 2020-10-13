@@ -309,6 +309,9 @@
     <ClCompile Include="..\..\Quake\d3d12\d3d12_raytrace_cleanup.cpp">
       <Filter>Source Files\d3d12</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Quake\d3d12\d3d12_clear.cpp">
+      <Filter>Source Files\d3d12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Quake\anorm_dots.h">

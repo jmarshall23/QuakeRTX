@@ -499,7 +499,9 @@ void GL_Init(HWND hwnd, HINSTANCE hinstance, int width, int height)
 
 	GL_InitRaytracing(width, height);
 
+	GL_InitClearPass(lightTexture);
 	GL_InitCompositePass(albedoTexture, lightTexture, compositeStagingTexture, compositeTexture, uiTexture);
+
 
 	GL_LoadMegaXML("id1/mega/mega.xml");
 
@@ -809,6 +811,8 @@ void GL_CalcFov(float base_fov, float& fov_x, float& fov_y) {
 void GL_Render(float x, float y, float z, float* viewAngles)
 {
 	std::vector<DirectX::XMMATRIX> matrices(4);
+
+	GL_ClearLightPass(lightTexture, m_commandList.Get(), m_commandAllocator.Get());
 
 	GL_BuildLightList(x, y, z);
 
