@@ -2384,7 +2384,15 @@ void Mod_LoadBrushModel (qmodel_t *mod, void *buffer)
 			//	lightStyle = 8;
 			//}
 
-			GL_RegisterWorldAreaLight(plane->normal, mins, maxs, lightStyle, 300);
+			vec3_t plane_normal;
+
+			plane_normal[0] = plane->normal[0] * -plane->dist;
+			plane_normal[1] = plane->normal[1] * -plane->dist;
+			plane_normal[2] = plane->normal[2] * -plane->dist;
+
+			VectorNormalize(plane_normal);
+
+			GL_RegisterWorldAreaLight(plane_normal, mins, maxs, lightStyle, 200);
 		}
 	}
 

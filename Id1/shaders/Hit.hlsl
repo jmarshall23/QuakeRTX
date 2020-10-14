@@ -224,7 +224,8 @@ float3 FireSecondRay(float3 worldOrigin, float distance, float3 normal)
 	if(payload.payload_color.w == 0) // Missed.
 		return float3(0, 0, 0);
 		
-		
+	uint bounceVertId = BInstanceProperties[int(payload.payload_vert_info.y)].startVertex + (payload.payload_vert_info.x);
+	float3 bounceNormal = BTriVertex[bounceVertId].normal;
     float3 bounceWorldOrigin = payload.payload_color.xyz;	
 	float3 result = float3(0, 0, 0);
 	int numLights = 0;
@@ -240,7 +241,10 @@ float3 FireSecondRay(float3 worldOrigin, float distance, float3 normal)
 			float3 centerLightDir = lightPos - bounceWorldOrigin;
 			float lightDistance = length(centerLightDir);
 			
+			float angle = dot (normalize(centerLightDir), bounceNormal);
+			
 			r = (lightInfo[i].origin_radius.w / pow(lightDistance, 1.3)) - 1.0;
+			//r = r * angle;
 		}
 		else // area lights
 		{
@@ -248,7 +252,10 @@ float3 FireSecondRay(float3 worldOrigin, float distance, float3 normal)
 			float3 centerLightDir = lightPos - bounceWorldOrigin;
 			float lightDistance = length(centerLightDir);
 			
+			float angle = dot (normalize(centerLightDir), bounceNormal);
+			
 			r = (-lightInfo[i].origin_radius.w / pow(lightDistance, 1.3)) - 0.3;
+			//r = r * angle;
 		}
 		
 		r = clamp(r, 0.0, 1.0);
@@ -328,6 +335,10 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 	return numerator / max(denominator, 0.001);  
 }
 
+int sideOfPlane(float3 p, float3 pc, float3 pn){
+   if (dot(p-pc,pn)>=0.0) return 1; else return 0;
+}
+
 [shader("closesthit")] void ClosestHit(inout HitInfo payload,
                                        Attributes attrib) {
   float3 barycentrics =
@@ -346,6 +357,7 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
   float3 debug = float3(1, 1, 1);
   
   float3 normal = BTriVertex[vertId + 0].normal;
+  float3 orig_normal = BTriVertex[vertId + 0].normal;
   bool isBackFacing = dot(normal, WorldRayDirection()) > 0.f;
   if (isBackFacing)
 	normal = -normal;
@@ -389,9 +401,11 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 			float dist = dot(v, lightInfo[i].light_color.xyz); // lightInfo[i].light_color.xyz is the normal, temp hack!
 			float3 plane_point = worldOrigin - dist * lightInfo[i].light_color.xyz;
 			
-			float x_sign = sign(lightInfo[i].light_clamp[0] - 1.0f);
-			float y_sign = sign(lightInfo[i].light_clamp[1] - 1.0f);
-			float z_sign = sign(lightInfo[i].light_clamp[2] - 1.0f);
+			float3 plane_normal = lightInfo[i].light_color.xyz;
+			
+			float x_sign = sign(plane_normal[0]);
+			float y_sign = sign(plane_normal[1]);
+			float z_sign = sign(plane_normal[2]);
 			
 			// Clamp the point within the distance of the plane.
 			float3 plane_point_dist = plane_point - lightInfo[i].origin_radius.xyz;
@@ -404,12 +418,12 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
 			float3 centerLightDir = clamped_point - (worldOrigin);
 			float lightDistance = length(centerLightDir);
 			
-			float falloff = attenuation(-lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir)) - 0.2;  			
+			float falloff = attenuation(-lightInfo[i].origin_radius.w, 1.0, lightDistance, normal, normalize(centerLightDir)) - 0.1;  			
 			falloff = clamp(falloff, 0.0, 1.0);
-					
+						
 			if(falloff > 0)
 			{
-				if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance, normal))
+				if(!IsLightShadowed(worldOrigin, normalize(centerLightDir), lightDistance, plane_normal))
 				{
 					float3 V = viewPos - worldOrigin;
 					float spec = CalcPBR(V, normal, normalize(centerLightDir), 0.5, float3(1, 1, 1), float3(0.5, 0.5, 0.5));
@@ -482,20 +496,23 @@ float3 CalcPBR(float3 cameraVector, float3 N, float3 L, float roughness, float3 
   }
 
 	// Fire the secondary bounce
-	{
-		int r = 1; //length(float3(worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y));
-		float3 bounce = float3(0, 0, 0);
-		for(int i = 4; i < 9; i++)
-		{
-			float3 worldDir = getCosHemisphereSample(r, normal) * i;
-			bounce += FireSecondRay(worldOrigin, 500, worldDir);
-		}
-		ndotl += (bounce / 5);
-		//ndotl += FireSecondRay(worldOrigin, 300, normal);
-	}
+	//{
+	//	int r = 1; //length(float3(worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y, worldOrigin.x + worldOrigin.y));
+	//	float3 bounce = float3(0, 0, 0);
+	//	for(int i = 1; i < 15; i++)
+	//	{
+	//		float3 worldDir = getCosHemisphereSample(r , normal);
+	//		bounce += FireSecondRay(worldOrigin, 500, worldDir);
+	//	}
+	//	if(length(bounce) > 0)
+	//	{
+	//	//	ndotl += bounce / 15;
+	//	}
+	//	//ndotl += FireSecondRay(worldOrigin, 300, normal);
+	//}
 
   //hitColor = float3(InstanceID(), 0, 0);
-  ndotl += 0.15;
+  ndotl = ndotl + 0.2;
 
   payload.colorAndDistance = float4(hitColor, 1.0);//float4(hitColor * ndotl * debug, RayTCurrent());
   payload.lightColor = float4(ndotl, BTriVertex[vertId + 0].st.z);

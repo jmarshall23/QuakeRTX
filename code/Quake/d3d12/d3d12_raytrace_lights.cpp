@@ -127,7 +127,7 @@ void GL_RegisterWorldAreaLight(vec3_t normal, vec3_t mins, vec3_t maxs, int ligh
 	glLight_t light = { };
 	vec3_t origin;
 	vec3_t light_clamp;
-
+	
 	VectorAdd(maxs, mins, origin);
 	VectorSubtract(maxs, mins, light_clamp);
 
@@ -155,6 +155,13 @@ void GL_RegisterWorldAreaLight(vec3_t normal, vec3_t mins, vec3_t maxs, int ligh
 	light.lightStyle = lightStyle;
 
 	light.isAreaLight = true;
+
+	// Quake sub divides geometry(lovely) so to hack around that don't add any area lights that are near already registered area lights!
+	for (int i = 0; i < numWorldLights; i++) {
+		float dist = Distance(light.origin_radius, worldLights[i].origin_radius);
+		if (dist < 75)
+			return;
+	}
 
 	light.num_leafs = -1; // arealight
 	worldLights[numWorldLights++] = light;
@@ -191,14 +198,14 @@ void GL_BuildLightList(float x, float y, float z) {
 
 	memset(sceneLights, 0, sizeof(sceneLightInfo_t) * MAX_DRAW_LIGHTS);
 	
-	for (int i = 0; i < numWorldLights; i++) {
-		glLight_t* ent = &worldLights[i];
-		vec3_t viewpos = { x, y, z };
-
-		ent->distance = Distance(ent->origin_radius, viewpos);
-	}
-
-	qsort(worldLights, numWorldLights, sizeof(glLight_t), lightSort);
+	//for (int i = 0; i < numWorldLights; i++) {
+	//	glLight_t* ent = &worldLights[i];
+	//	vec3_t viewpos = { x, y, z };
+	//
+	//	ent->distance = Distance(ent->origin_radius, viewpos);
+	//}
+	//
+	//qsort(worldLights, numWorldLights, sizeof(glLight_t), lightSort);
 
 	for(int i = 0; i < numWorldLights; i++) {
 		if(numVisLights >= MAX_DRAW_LIGHTS) {
