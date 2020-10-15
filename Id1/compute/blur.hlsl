@@ -84,7 +84,7 @@ void vblur_main(uint3 gid : SV_GroupID, uint gindex : SV_GroupIndex, uint3 dispa
   GroupMemoryBarrierWithGroupSync();
 
   float4 value = 0;
-  if(coord.y < realOffset + NUM_THREADS_X - HALF_KERNEL_SIZE && coord.y > realOffset + HALF_KERNEL_SIZE)
+  if(coord.y < yoffset + NUM_THREADS_X - HALF_KERNEL_SIZE && coord.y > yoffset + HALF_KERNEL_SIZE)
   {
 	for (int i = -HALF_KERNEL_SIZE; i < HALF_KERNEL_SIZE; ++i) {
 		int index = gindex + i;
