@@ -9,6 +9,7 @@ struct STriVertex {
   float3 st;
   float3 normal;
   float4 vtinfo;
+  float4 tangent;
 };
 
 struct SInstanceProperties

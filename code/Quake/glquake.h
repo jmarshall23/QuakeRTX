@@ -436,5 +436,24 @@ inline void AddPointToBounds(const vec3_t v, vec3_t mins, vec3_t maxs) {
 }
 
 
+inline vec_t VectorNormalize2(vec3_t v, vec3_t out)
+{
+	float	length, ilength;
+
+	length = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+	length = sqrt(length);		// FIXME
+
+	if (length)
+	{
+		ilength = 1 / length;
+		out[0] = v[0] * ilength;
+		out[1] = v[1] * ilength;
+		out[2] = v[2] * ilength;
+	}
+
+	return length;
+
+}
+
 #endif	/* __GLQUAKE_H */
 
